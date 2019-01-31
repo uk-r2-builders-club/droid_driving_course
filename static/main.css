@@ -1,0 +1,30 @@
+.main {
+	position: relative;
+	padding: 3px;
+}
+table.results_table {
+        border: 1px solid black;
+	border-collapse: collapse;
+	width: 95%;
+}
+table.results_table tr,td,th{
+	border: 1px solid black;
+}
+tr.results_table {
+	text-align: center;
+}
+
+.grid-container {
+  display: grid;
+  grid-template-columns: 300px 1.3fr;
+  grid-template-rows: 300px auto 75px;
+  grid-template-areas: "logo contender" "results results" "logs logs";
+}
+
+.results { grid-area: results; }
+
+.logs { grid-area: logs; }
+
+.logo { grid-area: logo; }
+
+.contender { grid-area: contender; }

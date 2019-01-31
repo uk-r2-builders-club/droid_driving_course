@@ -1,0 +1,73 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+	<title>R2 Builders Driving Course</title>
+        <link rel="stylesheet" type="text/css" href="{{ url_for('static',filename='main.css') }}">
+        <link rel="stylesheet" href="https://www.w3schools.com/w3css/4/w3.css">
+	<script type="text/javascript" src="//code.jquery.com/jquery-1.4.2.min.js"></script>
+        <script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/socket.io/1.3.5/socket.io.min.js"></script>
+        <script type="text/javascript" charset="utf-8">
+	$(document).ready(function() {
+            namespace = '/comms';
+            var socket = io.connect(location.protocol + '//' + document.domain + ':' + location.port + namespace);
+            socket.on('my_response', function(msg) {
+                $('.logs').append('<br>' + $('<div/>').text('Log # ' + msg.data).html());
+            });
+	    socket.on('reload_contender', function(msg) {
+		    // Reload div
+            });
+	    socket.on('reload_results', function(msg) {
+                    // Reload div
+		    $.getJSON("/display/results", 
+			    function (json) {
+				    var tbody;
+				    tbody = "";
+        			    for (var i = 0; i < json.length; i++) {
+				       tbody += "<tr>";
+                                       tbody += "<td>" + json[i].member + "</td>";
+                                       tbody += "<td>" + json[i].droid + "</td>";
+				       tbody += "<td>" + json[i].first_half + "</td>";
+				       tbody += "<td>" + json[i].second_half + "</td>";
+				       tbody += "<td>" + json[i].clock_time + "</td>";
+                                       tbody += "<td>" + json[i].final_time + "</td>";
+				       tbody += "</tr>";
+                                    }
+				    $('#results_body').empty().append(tbody);
+                           });
+            });
+
+            // Handlers for the different forms in the page.
+            // These accept data from the user and send it to the server in a
+            // variety of ways
+        });
+    </script>
+</head>
+<body>
+	<div class="grid-container">
+		<div class="logo"></div>
+		<div class="contender">
+                        <h1>Contender</h1>
+                        <table id=contender_table>
+                                <tr>
+                                        <td id=driver_image>Driver Image</td>
+                                        <td id=driver_name>Name</td>
+                                        <td id=droid_image>Droid Image</td>
+                                        <td id=droid_details>Droid Details</td>
+                                </tr>
+                        </table>
+                </div>
+		<div class="results">
+			<table class="results_table">
+				<thead>
+					<tr><th>Driver</th><th>Droid</th><th>First Half</th><th>Second Half</th><th>Clock Time</th><th>Final Time</th></tr>
+				</thead>
+				<tbody id="results_body">
+				</tbody>
+			</table>
+		</div>
+		<div class="logs"></div>
+	</div>
+</body>
+</html>
+
+
