@@ -1,4 +1,5 @@
 db/r2_course.db
+Arduino/RFIDReader/config.h
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]

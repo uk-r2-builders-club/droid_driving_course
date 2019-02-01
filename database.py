@@ -215,7 +215,7 @@ def list_results():
     results = []
     conn = create_connection(db_location)
     c = conn.cursor()
-    c.execute("SELECT * FROM runs;")
+    c.execute("SELECT * FROM runs ORDER BY final_time ASC;")
     runs = c.fetchall()
     for run in runs:
         data = {}

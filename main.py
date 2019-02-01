@@ -27,13 +27,13 @@ if not os.path.isfile(configfile):
 
 defaults = config.defaults()
 
-Droid = namedtuple('Droid', 'droid_uid, rfid, member_uid, name, droid_type, material, weight, transmitter_type')
-Driver = namedtuple('Driver', 'member_uid, rfid, forename, surname, email')
+Droid = namedtuple('Droid', 'droid_uid, rfid, member_uid, name, material, weight, transmitter_type')
+Driver = namedtuple('Driver', 'member_uid, rfid, name, email')
 
 api_key = defaults['api_key']
 
-current_droid = Droid(droid_uid=0, rfid="none", member_uid=0, name="none", droid_type="none", material="none", weight="none", transmitter_type="none")
-current_member = Driver(member_uid=0, rfid="none", forename="none", surname="none", email="none")
+current_droid = Droid(droid_uid=0, rfid="none", member_uid=0, name="none", material="none", weight="none", transmitter_type="none")
+current_member = Driver(member_uid=0, rfid="none", name="none", email="none")
 current_run = 0
 
 def get_member_details(did):
@@ -63,10 +63,16 @@ def display(cmd):
     if request.method == 'GET':
         if cmd == 'results':
             return database.list_results()
-            # socketio.emit('reload_results', {'data': 'reload results'}, namespace='/comms')
         if cmd == 'contender':
-            
-            # socketio.emit('reload_contender', {'data': 'reload contender'}, namespace='/comms')
+            contender = {}
+            contender['member_uid'] = current_member.member_uid
+            contender['member'] = current_member.name
+            contender['droid_uid'] = current_droid.droid_uid
+            contender['droid'] = current_droid.name
+            contender['material'] = current_droid.material
+            contender['weight'] = current_droid.weight
+            contender['transmitter_type'] = current_droid.transmitter_type
+            return json.dumps(contender)
     return "Ok"
 
 @app.route('/droid/<did>', methods=['GET'])
@@ -169,9 +175,15 @@ def refresh_scoreboard():
         socketio.emit('reload_results', {'data': 'reload results'}, namespace='/comms')
     return "Ok"
 
+@app.route('/rfid/<tag>', methods=['GET'])
+def read_rfid(tag):
+    if request.method == 'GET':
+        if __debug__:
+            print("Received RFID tag: %s" % tag)
+    return "Ok"
 
 if __name__ == '__main__':
     database.db_init()
     # app.run(host='0.0.0.0', debug=__debug__, use_reloader=False, threaded=True)
-    socketio.run(app)
+    socketio.run(app, host='0.0.0.0', debug=__debug__, use_reloader=False)
 
