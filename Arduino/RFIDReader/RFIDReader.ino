@@ -222,7 +222,48 @@ void loop(void) {
           Serial.print("Member UID: ");
           Serial.println(member_uid);
 
+          String memberCall = String((char*)api) + "member/" + member_uid;
+          String droidCall = String((char*)api) + "droid/" + droid_uid;
+      
+          Serial.println("New card presented.... send API call");
+          Serial.println("Register driver");
+          Serial.println(memberCall);
+          HTTPClient http;
+          http.begin(memberCall);
+          int httpCode = http.GET();
+          // httpCode will be negative on error
+          if (httpCode > 0) {
+            // HTTP header has been send and Server response header has been handled
+            // file found at server
+            if (httpCode == HTTP_CODE_OK) {
+              String payload = http.getString();
+              Serial.print("Response OK: ");
+              Serial.println(payload);
+            }
+          } else {
+            Serial.println("Error");
+          }
+          http.end();
+          Serial.println("Register droid");
+          Serial.println(droidCall);
+          http.begin(droidCall);
+          httpCode = http.GET();
+          // httpCode will be negative on error
+          if (httpCode > 0) {
+            // HTTP header has been send and Server response header has been handled
+            // file found at server
+            if (httpCode == HTTP_CODE_OK) {
+              String payload = http.getString();
+              Serial.print("Response OK: ");
+              Serial.println(payload);
+            }
+          } else {
+            Serial.println("Error");
+          }
+           http.end();
+
           // Wait a bit before reading the card again
+          delay(2000);
         }
         else
         {
@@ -235,74 +276,6 @@ void loop(void) {
       }
     }
     
-    if (uidLength == 7)
-    {
-      // We probably have a Mifare Ultralight card ...
-      Serial.println("Seems to be a Mifare Ultralight tag (7 byte UID)");
-	  
-      // Try to read the first general-purpose user page (#4)
-      Serial.println("Reading page 4");
-      uint8_t data[32];
-      success = nfc.mifareultralight_ReadPage (4, data);
-      if (success)
-      {
-        // Data seems to have been read ... spit it out
-        nfc.PrintHexChar(data, 4);
-        Serial.println("");
-		
-        // Wait a bit before reading the card again
-      }
-      else
-      {
-        Serial.println("Ooops ... unable to read the requested page!?");
-      }
-    }
-    if (memcmp_P(uid, last_uid, 7) != 0) 
-    {
-      uint8_t i;
-      String memberCall = String((char*)api) + "member/" + member_uid;
-      String droidCall = String((char*)api) + "droid/" + droid_uid;
-      
-      Serial.println("New card presented.... send API call");
-      Serial.println("Register driver");
-      Serial.println(memberCall);
-      HTTPClient http;
-      http.begin(memberCall);
-      int httpCode = http.GET();
-      // httpCode will be negative on error
-      if (httpCode > 0) {
-        // HTTP header has been send and Server response header has been handled
-        // file found at server
-        if (httpCode == HTTP_CODE_OK) {
-          String payload = http.getString();
-          Serial.print("Response OK: ");
-          Serial.println(payload);
-        }
-      } else {
-        Serial.println("Error");
-      }
-      http.end();
-            Serial.println("Register droid");
-      Serial.println(droidCall);
-      http.begin(droidCall);
-      httpCode = http.GET();
-      // httpCode will be negative on error
-      if (httpCode > 0) {
-        // HTTP header has been send and Server response header has been handled
-        // file found at server
-        if (httpCode == HTTP_CODE_OK) {
-          String payload = http.getString();
-          Serial.print("Response OK: ");
-          Serial.println(payload);
-        }
-      } else {
-        Serial.println("Error");
-      }
-      http.end();
-    }
-    
-    byte i = 5; // good to 255 elements
-    while ( i-- ) *( last_uid + i ) = *( uid + i ); // dest and src are your 2 array names
     delay(1000);
   }
 }

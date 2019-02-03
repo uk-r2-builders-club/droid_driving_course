@@ -73,6 +73,11 @@ def display(cmd):
             contender['weight'] = current_droid.weight
             contender['transmitter_type'] = current_droid.transmitter_type
             return json.dumps(contender)
+        if cmd == 'current':
+            if current_run != 0:
+                return json.dumps(database.current_run(current_run))
+            else: 
+                return "none"
     return "Ok"
 
 @app.route('/droid/<did>', methods=['GET'])
@@ -132,7 +137,13 @@ def run_cmd(cmd):
             socketio.emit('reload_results', {'data': 'reload results'}, namespace='/comms') 
         if cmd == 'RESET':
             current_run = 0
+            current_droid = Droid(droid_uid=0, rfid="none", member_uid=0, name="none", material="none", weight="none", transmitter_type="none")
+            current_member = Driver(member_uid=0, rfid="none", name="none", email="none")
             socketio.emit('my_response', {'data': 'Resetting'}, namespace='/comms')
+            socketio.emit('reload_results', {'data': 'reload results'}, namespace='/comms')
+            socketio.emit('reload_contender', {'data': 'reload contender'}, namespace='/comms')
+            socketio.emit('reload_current', {'data': 'reload current'}, namespace='/comms')
+        socketio.emit('reload_current', {'data': 'reload current'}, namespace='/comms')
     return "Ok"
 
 @app.route('/admin/clear_db', methods=['GET'])
@@ -152,6 +163,7 @@ def refresh_members():
         for uid in uids:
            member = json.loads(urllib.request.urlopen("https://r2djp.co.uk/new_mot/api.php?api=" + api_key + "&request=member&id=" + uid).read())
            database.add_member(member)
+           urllib.request.urlretrieve("https://r2djp.co.uk/new_mot/api.php?api=" + api_key + "&request=mug_shot&id=" + uid, "static/members/" + uid + ".jpg")
         socketio.emit('my_response', {'data': '**ADMIN** Members list refreshed'}, namespace='/comms')
     return "Ok"
 
@@ -165,14 +177,16 @@ def refresh_droids():
         for uid in uids:
            droid = json.loads(urllib.request.urlopen("https://r2djp.co.uk/new_mot/api.php?api=" + api_key + "&request=droid&id=" + uid).read())
            database.add_droid(droid)
+           urllib.request.urlretrieve("https://r2djp.co.uk/new_mot/api.php?api=" + api_key + "&request=droid_shot&id=" + uid, "static/droids/" + uid + ".jpg")
         socketio.emit('my_response', {'data': '**ADMIN** Droids list refreshed'}, namespace='/comms')
     return "Ok"
 
 @app.route('/admin/refresh/scoreboard', methods=['GET'])
 def refresh_scoreboard():
     if request.method == 'GET':
-        socketio.emit('my_response', {'data': '**ADMIN** Results refreshed'}, namespace='/comms')
+        socketio.emit('my_response', {'data': '**ADMIN** Scoreboard refreshed'}, namespace='/comms')
         socketio.emit('reload_results', {'data': 'reload results'}, namespace='/comms')
+        socketio.emit('reload_current', {'data': 'reload current'}, namespace='/comms')
     return "Ok"
 
 @app.route('/rfid/<tag>', methods=['GET'])

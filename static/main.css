@@ -1,30 +1,47 @@
-.main {
-	position: relative;
-	padding: 3px;
-}
-table.results_table {
+table {
         border: 1px solid black;
 	border-collapse: collapse;
+	margin-left:auto;
+        margin-right:auto;
+	padding: 3px;
 	width: 95%;
 }
-table.results_table tr,td,th{
+table tr,td,th{
 	border: 1px solid black;
 }
-tr.results_table {
+tr {
 	text-align: center;
 }
+
+table.contender_table {
+	width: 500px;
+}
+table.contender_table tr,td,th {
+	border: 0px;
+}
+
+
 
 .grid-container {
   display: grid;
   grid-template-columns: 300px 1.3fr;
-  grid-template-rows: 300px auto 75px;
-  grid-template-areas: "logo contender" "results results" "logs logs";
+  grid-template-rows: 250px 200px auto 75px;
+  grid-template-areas: "logo contender" "current gates" "results results" "logs logs";
 }
 
 .results { grid-area: results; }
 
+.current { grid-area: current; }
+
+.gates { grid-area: gates; }
+
 .logs { grid-area: logs; }
 
-.logo { grid-area: logo; }
+.logo { grid-area: logo; 
+        margin-left:auto;
+        margin-right:auto;
+}
 
-.contender { grid-area: contender; }
+.contender { grid-area: contender;
+	padding: 2px;
+}

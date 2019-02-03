@@ -6,12 +6,12 @@ The RFID reader used is:
 
 https://www.aliexpress.com/item/PN532-NFC-RFID-Module-V3-Kits-Reader-Writer/32452824672.html
 
-GND -> GND
-3.3 -> VCC
-D2 --> SS 
-D4 --> SCK
-D6 --> MOSI
-D7 --> MISO
+* GND -> GND
+* 3.3 -> VCC
+* D2 --> SS 
+* D4 --> SCK
+* D6 --> MOSI
+* D7 --> MISO
 
 config.h needs to be created from the default file. This contains the SSID details for your wifi, along with the base API address.
 

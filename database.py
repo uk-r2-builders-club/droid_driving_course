@@ -151,6 +151,18 @@ def run(current, cmd, member_id, droid_id):
     conn.commit()
     return 
 
+def current_run(run_id):
+    """ Get current run details from database """
+    conn = create_connection(db_location)
+    c = conn.cursor()
+    c.execute("SELECT * FROM runs WHERE id = " + str(run_id))
+    run = dict((c.description[i][0], value) for i, value in enumerate(c.fetchone()))
+    if __debug__:
+        print(run)
+    conn.commit()
+    conn.close()
+    return run
+
 def log_penalty(gate_id, run_id):
     conn = create_connection(db_location)
     if conn is not None:
@@ -215,7 +227,7 @@ def list_results():
     results = []
     conn = create_connection(db_location)
     c = conn.cursor()
-    c.execute("SELECT * FROM runs ORDER BY final_time ASC;")
+    c.execute("SELECT * FROM runs WHERE final_time != \"\" ORDER BY final_time ASC;")
     runs = c.fetchall()
     for run in runs:
         data = {}
@@ -230,6 +242,7 @@ def list_results():
         data['clock_time'] = run[9]
         data['final_time'] = run[10]
         penalties = {}
+        num_penalties = 0
         gates = list_gates()
         for gate in gates:
             if __debug__:
@@ -240,11 +253,13 @@ def list_results():
                 if __debug__:
                     print("Fail on gate %s " % gate[2])
                 penalties[gate[2]] = gate[3]
+                num_penalties += 1
             else:
                 if __debug__:
                     print("Pass on gate %s " % gate[2])
                 penalties[gate[2]] = "0"
         data['penalties'] = penalties
+        data['num_penalties'] = num_penalties
         if __debug__:
             print(data)
         results.append(data)
