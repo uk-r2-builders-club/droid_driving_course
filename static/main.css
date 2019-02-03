@@ -24,11 +24,32 @@ table.contender_table tr,td,th {
 
 .grid-container {
   display: grid;
-  grid-template-columns: 300px 1.3fr;
+  grid-template-columns: 500px auto;
   grid-template-rows: 250px 200px auto 75px;
-  grid-template-areas: "logo contender" "current gates" "results results" "logs logs";
+  grid-template-areas: "logo contender" "current gates-container" "results results" "logs logs";
 }
 
+.gates-container {
+	display: grid;
+	max-width: 1000px;
+	grid-template-columns: repeat(3, 200px);
+	grid-gap: 1px;
+	grid-area: gates-container;
+	margin: 30px;
+        margin-left:auto;
+        margin-right:auto;
+
+
+	@media (min-width: 150) {
+		grid-template-columns: repeat(auto-fit, minmax(100px, 300px));
+	}
+}
+
+.gate { 
+	text-align: center;
+	padding: 1px;
+	background-color: green;
+}
 .results { grid-area: results; }
 
 .current { grid-area: current; }

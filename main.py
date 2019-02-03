@@ -78,6 +78,14 @@ def display(cmd):
                 return json.dumps(database.current_run(current_run))
             else: 
                 return "none"
+        if cmd == 'list_gates':
+            gates = json.dumps(database.list_gates())
+            if __debug__:
+                print("Gates: %s" % gates)
+            return gates
+        if cmd == 'current_gates':
+            if current_run != 0:
+                return json.dumps(database.list_penalties(current_run))
     return "Ok"
 
 @app.route('/droid/<did>', methods=['GET'])
@@ -111,6 +119,7 @@ def gate_trigger(gid, value):
         if value == 'FAIL':
             database.log_penalty(gid, current_run)
             socketio.emit('my_response', {'data': 'PENALTY!!!'}, namespace='/comms')
+            socketio.emit('reload_gates', {'data': 'reload current'}, namespace='/comms')
         else:
             print("Gate passed")
         print("Gate ID: %s | %s" % (gid, value))
@@ -143,14 +152,20 @@ def run_cmd(cmd):
             socketio.emit('reload_results', {'data': 'reload results'}, namespace='/comms')
             socketio.emit('reload_contender', {'data': 'reload contender'}, namespace='/comms')
             socketio.emit('reload_current', {'data': 'reload current'}, namespace='/comms')
+            socketio.emit('reload_gates', {'data': 'reload current'}, namespace='/comms')
         socketio.emit('reload_current', {'data': 'reload current'}, namespace='/comms')
     return "Ok"
+
+@app.route('/admin')
+def admin():
+    return render_template('admin.html', async_mode=socketio.async_mode)
 
 @app.route('/admin/clear_db', methods=['GET'])
 def clear_db():
     if request.method == 'GET':
         database.clear_db("all")
         socketio.emit('my_response', {'data': '**ADMIN** Database cleared'}, namespace='/comms')
+        socketio.emit('reload_results', {'data': 'reload results'}, namespace='/comms')
     return "Ok"
 
 @app.route('/admin/refresh/members', methods=['GET'])
@@ -187,6 +202,7 @@ def refresh_scoreboard():
         socketio.emit('my_response', {'data': '**ADMIN** Scoreboard refreshed'}, namespace='/comms')
         socketio.emit('reload_results', {'data': 'reload results'}, namespace='/comms')
         socketio.emit('reload_current', {'data': 'reload current'}, namespace='/comms')
+        socketio.emit('reload_gates', {'data': 'reload current'}, namespace='/comms')
     return "Ok"
 
 @app.route('/rfid/<tag>', methods=['GET'])

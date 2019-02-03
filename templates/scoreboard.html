@@ -9,6 +9,22 @@
         <script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/socket.io/1.3.5/socket.io.min.js"></script>
         <script type="text/javascript" charset="utf-8">
 	$(document).ready(function() {
+		var num_gates = 0;
+                $.getJSON("/display/list_gates",
+			function (json) {
+				console.log(json);
+                                var gates = document.getElementById('gates');
+				var gates_text = "";
+				num_gates = json.length;
+				for (var i = 0; i < num_gates; i++) {
+					gates_text += "<div class=gate id=gate" + json[i].id + ">";
+					gates_text += json[i].name;
+					gates_text += "</div>";
+				}
+				gates.innerHTML = gates_text;
+			});
+
+
                 namespace = '/comms';
                 var socket = io.connect(location.protocol + '//' + document.domain + ':' + location.port + namespace);
 
@@ -81,8 +97,17 @@
 
 		// Reload the gates area
                 socket.on('reload_gates', function(msg) {
-                       $.getJSON("/display/gates",
-                               function (json) {
+                       $.getJSON("/display/current_gates",
+                               function (penalties, num) {
+				       console.log(penalties[0]);
+				       for (var i = 1; i < num_gates + 1; i++) {
+				           var gate = document.getElementById('gate' + i);
+				           console.log("Testing" + penalties[0][i]);
+				           if ( penalties[0][i] != "0" ) {
+						   gate.style.backgroundColor = "red";
+					   }
+				       
+				       }
                                });
                 });
 
@@ -135,10 +160,7 @@
 				<tr><td>Second Half</td><td><second_half></second_half></td></tr>
 			</table>
 		</div>
-		<div class="gates">
-			<h2>Gates</h2>
-			<table class="gates_table">
-			</table>
+		<div class="gates-container" id="gates">
 		</div>
 		<div class="results">
 			<table class="results_table">

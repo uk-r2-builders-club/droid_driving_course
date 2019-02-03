@@ -219,9 +219,39 @@ def add_droid(data):
 
 def list_gates():
     conn = create_connection(db_location)
+    conn.row_factory = sqlite3.Row
     c = conn.cursor()
     c.execute("SELECT * FROM gates;")
-    return c.fetchall()
+    gates = [dict(row) for row in c.fetchall()]
+    if __debug__:
+        print("Gates: %s" % gates)
+    return gates
+
+def list_penalties(runid):
+    conn = create_connection(db_location)
+    c = conn.cursor()
+    num_penalties = 0
+    penalties = {}
+    gates = list_gates()
+    for gate in gates:
+        if __debug__:
+            print("Checking gate: %s" % gate['name'])
+        c.execute("SELECT * FROM penalties WHERE gate_id = " + str(gate['id']) + " AND run_id = " + str(runid))
+        penalty = c.fetchone()
+        if penalty is not None:
+            if __debug__:
+                print("Fail on gate %s " % gate['name'])
+            penalties[gate['id']] = gate['penalty']
+            num_penalties += 1
+        else:
+            if __debug__:
+                print("Pass on gate %s " % gate['name'])
+            penalties[gate['id']] = "0"
+    if __debug__:
+        print("Penalties: %s" % penalties)
+        print("Number of Penalties: %s" % num_penalties)
+    return penalties, num_penalties
+
 
 def list_results():
     results = []
@@ -241,25 +271,7 @@ def list_results():
         data['second_half'] = run[8]
         data['clock_time'] = run[9]
         data['final_time'] = run[10]
-        penalties = {}
-        num_penalties = 0
-        gates = list_gates()
-        for gate in gates:
-            if __debug__:
-                print("Checking gate: %s" % gate[2])
-            c.execute("SELECT * FROM penalties WHERE gate_id = " + str(gate[0]) + " AND run_id = " + str(run[0]))
-            penalty = c.fetchone()
-            if penalty is not None:
-                if __debug__:
-                    print("Fail on gate %s " % gate[2])
-                penalties[gate[2]] = gate[3]
-                num_penalties += 1
-            else:
-                if __debug__:
-                    print("Pass on gate %s " % gate[2])
-                penalties[gate[2]] = "0"
-        data['penalties'] = penalties
-        data['num_penalties'] = num_penalties
+        data['penalties'], data['num_penalties'] = list_penalties(run[0])
         if __debug__:
             print(data)
         results.append(data)
