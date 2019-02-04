@@ -53,38 +53,20 @@ String member_uid;
 #define PN532_SS   (4)
 #define PN532_MISO (13)
 
-// If using the breakout or shield with I2C, define just the pins connected
-// to the IRQ and reset lines.  Use the values below (2, 3) for the shield!
-#define PN532_IRQ   (2)
-#define PN532_RESET (3)  // Not connected by default on the NFC Shield
+#define BUZZER (5)
+#define LED (0)
 
-// Uncomment just _one_ line below depending on how your breakout or shield
-// is connected to the Arduino:
+ADC_MODE(ADC_VCC);
 
 // Use this line for a breakout with a software SPI connection (recommended):
 Adafruit_PN532 nfc(PN532_SCK, PN532_MISO, PN532_MOSI, PN532_SS);
 
-// Use this line for a breakout with a hardware SPI connection.  Note that
-// the PN532 SCK, MOSI, and MISO pins need to be connected to the Arduino's
-// hardware SPI SCK, MOSI, and MISO pins.  On an Arduino Uno these are
-// SCK = 13, MOSI = 11, MISO = 12.  The SS line can be any digital IO pin.
-//Adafruit_PN532 nfc(PN532_SS);
-
-// Or use this line for a breakout or shield with an I2C connection:
-//Adafruit_PN532 nfc(PN532_IRQ, PN532_RESET);
-
-#if defined(ARDUINO_ARCH_SAMD)
-// for Zero, output on USB Serial console, remove line below if using programming port to program the Zero!
-// also change #define in Adafruit_PN532.cpp library file
-   #define Serial SerialUSB
-#endif
-
 uint8_t last_uid[] = { 0, 0, 0, 0, 0, 0, 0 };
 
 void setup(void) {
-  #ifndef ESP8266
-    while (!Serial); // for Leonardo/Micro/Zero
-  #endif
+  pinMode(BUZZER, OUTPUT);
+  pinMode(LED, OUTPUT);
+  
   Serial.begin(115200);
   Serial.print("Connecting to ");
   Serial.println(ssid);
@@ -158,11 +140,6 @@ void loop(void) {
         uint8_t data3[16];
         uint8_t data4[16];
         uint8_t data[64];
-		
-        // If you want to write something to block 4 to test with, uncomment
-		// the following line and this text should be read back in a minute
-        //memcpy(data, (const uint8_t[]){ 'a', 'd', 'a', 'f', 'r', 'u', 'i', 't', '.', 'c', 'o', 'm', 0, 0, 0, 0 }, sizeof data);
-        //success = nfc.mifareclassic_WriteDataBlock (4, data);
 
         // Try to read the contents of block 4
         success = nfc.mifareclassic_ReadDataBlock(4, data1);
@@ -262,8 +239,16 @@ void loop(void) {
           }
            http.end();
 
+          // Lets notify that a card was read ok
+          tone(BUZZER, 1000);
+          digitalWrite(LED, HIGH);
+          delay(500);
+          noTone(BUZZER);
+          digitalWrite(LED, LOW);
           // Wait a bit before reading the card again
           delay(2000);
+          Serial.print("VCC Voltage: ");
+          Serial.println(ESP.getVcc());
         }
         else
         {

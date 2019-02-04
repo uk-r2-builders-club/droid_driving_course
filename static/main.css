@@ -25,7 +25,7 @@ table.contender_table tr,td,th {
 .grid-container {
   display: grid;
   grid-template-columns: 500px auto;
-  grid-template-rows: 250px 200px auto 75px;
+  grid-template-rows: 230px 220px auto 75px;
   grid-template-areas: "logo contender" "current gates-container" "results results" "logs logs";
 }
 
@@ -36,6 +36,7 @@ table.contender_table tr,td,th {
 	grid-gap: 1px;
 	grid-area: gates-container;
 	margin: 30px;
+	margin-top: 75px;
         margin-left:auto;
         margin-right:auto;
 
@@ -50,13 +51,19 @@ table.contender_table tr,td,th {
 	padding: 1px;
 	background-color: green;
 }
-.results { grid-area: results; }
+.results { grid-area: results; 
+	height: 100%;
+	overflow:hidden;
+}
 
 .current { grid-area: current; }
 
 .gates { grid-area: gates; }
 
-.logs { grid-area: logs; }
+.logs { grid-area: logs; 
+	height: 68px;
+	overflow:auto;
+}
 
 .logo { grid-area: logo; 
         margin-left:auto;

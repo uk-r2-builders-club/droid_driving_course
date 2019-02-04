@@ -74,42 +74,46 @@ def display(cmd):
             contender['transmitter_type'] = current_droid.transmitter_type
             return json.dumps(contender)
         if cmd == 'current':
-            if current_run != 0:
-                return json.dumps(database.current_run(current_run))
-            else: 
-                return "none"
+            return json.dumps(database.current_run(current_run))
         if cmd == 'list_gates':
             gates = json.dumps(database.list_gates())
             if __debug__:
                 print("Gates: %s" % gates)
             return gates
         if cmd == 'current_gates':
-            if current_run != 0:
-                return json.dumps(database.list_penalties(current_run))
+            return json.dumps(database.list_penalties(current_run))
     return "Ok"
 
 @app.route('/droid/<did>', methods=['GET'])
 def droid_register(did):
-    global current_droid
+    global current_droid, current_run
     if request.method == 'GET':
         data = json.dumps(database.get_droid(did))
         current_droid = json.loads(data, object_hook=lambda d: namedtuple('Droid', d.keys())(*d.values()))
         print(current_droid)
         print("Droid Registered: %s" % did)
+        current_run = 0
         socketio.emit('my_response', {'data': 'Droid Registered'}, namespace='/comms')
         socketio.emit('reload_contender', {'data': 'reload contender'}, namespace='/comms')
+        socketio.emit('reload_results', {'data': 'reload results'}, namespace='/comms')
+        socketio.emit('reload_current', {'data': 'reload current'}, namespace='/comms')
+        socketio.emit('reload_gates', {'data': 'reload current'}, namespace='/comms')
     return "Ok"
 
 @app.route('/member/<did>', methods=['GET'])
 def member_register(did):
-    global current_member
+    global current_member, current_run
     if request.method == 'GET':
         data = json.dumps(database.get_member(did))
         current_member = json.loads(data, object_hook=lambda d: namedtuple('Driver', d.keys())(*d.values()))
         print(current_member)
         print("Driver Registered: %s" % did)
+        current_run = 0
         socketio.emit('my_response', {'data': 'Driver Registered'}, namespace='/comms')
         socketio.emit('reload_contender', {'data': 'reload contender'}, namespace='/comms')
+        socketio.emit('reload_results', {'data': 'reload results'}, namespace='/comms')
+        socketio.emit('reload_current', {'data': 'reload current'}, namespace='/comms')
+        socketio.emit('reload_gates', {'data': 'reload current'}, namespace='/comms')
     return "Ok"
 
 @app.route('/gate/<gid>/<value>', methods=['GET'])
@@ -204,6 +208,25 @@ def refresh_scoreboard():
         socketio.emit('reload_current', {'data': 'reload current'}, namespace='/comms')
         socketio.emit('reload_gates', {'data': 'reload current'}, namespace='/comms')
     return "Ok"
+
+@app.route('/admin/upload/runs', methods=['GET'])
+def upload_runs():
+    if request.method == 'GET':
+        results = json.loads(database.list_runs())
+        print(results)
+        for result in results:
+            if __debug__:
+                print("Uploading Run ID: %s" % result['id'])
+            url = "https://r2djp.co.uk/new_mot/api.php?api=" + api_key + "&request=insert_course_run&id=" + urllib.parse.quote(str(result), safe='', encoding=None, errors=None)
+            code = urllib.request.urlopen(url).read().decode('utf-8').rstrip('\n')
+            print(code)
+            if code != "00000":
+                print("Error in uploading run")
+            else: 
+                print("Deleting row from local database")
+                database.delete_run(result['id'])
+    return "Ok"
+
 
 @app.route('/rfid/<tag>', methods=['GET'])
 def read_rfid(tag):

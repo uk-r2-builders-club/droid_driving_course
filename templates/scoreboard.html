@@ -12,7 +12,6 @@
 		var num_gates = 0;
                 $.getJSON("/display/list_gates",
 			function (json) {
-				console.log(json);
                                 var gates = document.getElementById('gates');
 				var gates_text = "";
 				num_gates = json.length;
@@ -31,13 +30,13 @@
 	        // Display log messages at the bottom of the screen
                 socket.on('my_response', function(msg) {
                        $('.logs').append('<br>' + $('<div/>').text('Log # ' + msg.data).html());
+			$('.logs').scrollTop($('.logs')[0].scrollHeight);
                 });
 
 		// Reload the contender area
 	        socket.on('reload_contender', function(msg) {
 		       $.getJSON("/display/contender",
                                function (json) {
-				       console.log(json);
                                        var driver_image;
 				       var droid_image;
 				       var droid_details;
@@ -63,10 +62,18 @@
 				       var status_field = document.querySelector('status');
 				       var first_half_field = document.querySelector('first_half');
 				       var second_half_field = document.querySelector('second_half');
-				       var run_status = "No Run";
+				       var clock_time_field = document.querySelector('clock_time');
+				       var final_time_field = document.querySelector('final_time');
+				       var penalties_field = document.querySelector('penalties');
+				       var run_status = "Waiting to Start";
 				       switch (true) {
 					       case (json.start == null):
-						       run_status = "No run";
+						       run_status = "Waiting to Start";
+						       first_half_field.innerHTML = "";
+						       second_half_field.innerHTML = "";
+				                       clock_time_field.innerHTML = "";
+				                       final_time_field.innerHTML = "";
+				                       penalties_field.innerHTML = "";
 						       break;
 			                       case ((json.start != null && json.middle_stop == null) || json.middle_start != null && json.end == null):
 						       run_status = "Running";
@@ -76,6 +83,10 @@
 						       break;
 					       case (json.end != null):
 						       run_status = "Finished";
+						       console.log("Clock time: " + json.clock_time);
+						       console.log("Final time: " + json.final_time);
+						       clock_time_field.innerHTML = new Date(json.clock_time * 1000).toISOString().substr(11,8);
+						       final_time_field.innerHTML = new Date(json.final_time * 1000 ).toISOString().substr(11,8);
 						       break;
 				       }
 				       if ( json.start !=null && json.middle_stop != null) {
@@ -90,6 +101,7 @@
                                        }
 
 				       status_field.innerHTML = run_status;
+				       penalties_field.innerHTML = json.num_penalties;
 
 
                                });
@@ -99,12 +111,12 @@
                 socket.on('reload_gates', function(msg) {
                        $.getJSON("/display/current_gates",
                                function (penalties, num) {
-				       console.log(penalties[0]);
 				       for (var i = 1; i < num_gates + 1; i++) {
 				           var gate = document.getElementById('gate' + i);
-				           console.log("Testing" + penalties[0][i]);
 				           if ( penalties[0][i] != "0" ) {
 						   gate.style.backgroundColor = "red";
+					   } else {
+						   gate.style.backgroundColor = "green";
 					   }
 				       
 				       }
@@ -115,10 +127,13 @@
 	        socket.on('reload_results', function(msg) {
 		        $.getJSON("/display/results", 
 			        function (json) {
-
 				        var tbody;
+					var rows = 10;
 				        tbody = "";
-        			        for (var i = 0; i < json.length; i++) {
+					if (json.length < 10) {
+						rows = json.length;
+					}
+        			        for (var i = 0; i < rows; i++) {
 				                tbody += "<tr>";
                                                 tbody += "<td>" + json[i].member + "</td>";
                                                 tbody += "<td>" + json[i].droid + "</td>";
@@ -158,11 +173,15 @@
 				<tr><td>Status</td><td><status></status></td></tr>
 				<tr><td>First Half</td><td><first_half></first_half></td></tr>
 				<tr><td>Second Half</td><td><second_half></second_half></td></tr>
+				<tr><td>Clock Time</td><td><clock_time></clock_time></td></tr>
+				<tr><td>Penalties</td><td><penalties></penalties></td></tr>
+				<tr><td>Final Time</td><td><final_time></final_time></td></tr>
 			</table>
 		</div>
 		<div class="gates-container" id="gates">
 		</div>
 		<div class="results">
+			<h2>Today's Top Drivers</h2>
 			<table class="results_table">
 				<thead>
 					<tr><th>Driver</th><th>Droid</th><th>First Half</th><th>Second Half</th><th>Clock Time</th><th>Penalties</th><th>Final Time</th></tr>

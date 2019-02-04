@@ -156,7 +156,12 @@ def current_run(run_id):
     conn = create_connection(db_location)
     c = conn.cursor()
     c.execute("SELECT * FROM runs WHERE id = " + str(run_id))
-    run = dict((c.description[i][0], value) for i, value in enumerate(c.fetchone()))
+    result = c.fetchone()
+    if result is not None:
+        run = dict((c.description[i][0], value) for i, value in enumerate(result))
+        run['penalties'], run['num_penalties'] = list_penalties(run_id);
+    else:
+        run = {'id': 0, 'start': None, 'middle_stop': None, 'middle_start': None, 'end': None, 'droid_uid': 0, 'member_uid': 0, 'first_half_time': None, 'second_half_time': None, 'clock_time': None, 'final_time': None, 'num_penalties': 0}
     if __debug__:
         print(run)
     conn.commit()
@@ -267,6 +272,7 @@ def list_results():
         droid = get_droid(str(run[5]))
         data['member'] = member['name']
         data['droid'] = droid['name']
+        data['start'] = run[1]
         data['first_half'] = run[7]
         data['second_half'] = run[8]
         data['clock_time'] = run[9]
@@ -276,6 +282,38 @@ def list_results():
             print(data)
         results.append(data)
     return json.dumps(results)
+
+def list_runs():
+    results = []
+    conn = create_connection(db_location)
+    c = conn.cursor()
+    c.execute("SELECT * FROM runs WHERE final_time != \"\" ORDER BY final_time ASC;")
+    runs = c.fetchall()
+    for run in runs:
+        data = {}
+        if __debug__:
+            print("Run: %s " % run[0])
+        data['id'] = run[0]
+        data['member_uid'] = run[6]
+        data['droid_uid'] = run[5]
+        data['start'] = run[1]
+        data['first_half'] = run[7]
+        data['second_half'] = run[8]
+        data['clock_time'] = run[9]
+        data['final_time'] = run[10]
+        data['penalties'], data['num_penalties'] = list_penalties(run[0])
+        if __debug__:
+            print(data)
+        results.append(data)
+    return json.dumps(results)
+
+def delete_run(run_id):
+    conn = create_connection(db_location)
+    c = conn.cursor()
+    c.execute("DELETE FROM runs WHERE id = " + str(run_id));
+    conn.commit()
+    conn.close()
+    return "Ok"
 
 
 if __name__ == '__main__':
