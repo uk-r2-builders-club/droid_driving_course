@@ -1,0 +1,12 @@
+[Unit]
+Description=R2Course
+After=network.target
+
+[Service]
+User=pi
+WorkingDirectory=/home/pi/droid_driving_course
+ExecStart=/home/pi/droid_driving_course/main.py
+Restart=true
+
+[Install]
+WantedBy=multi-user.target
