@@ -57,6 +57,11 @@ def index():
 def scoreboard():
     return render_template('scoreboard.html', async_mode=socketio.async_mode)
 
+@app.route('/results')
+def results():
+    return render_template('results.html', async_mode=socketio.async_mode)
+
+
 @app.route('/display/<cmd>')
 def display(cmd):
     global current_droid, current_member
