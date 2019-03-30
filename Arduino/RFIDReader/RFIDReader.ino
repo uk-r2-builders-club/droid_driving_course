@@ -8,7 +8,9 @@
     up for the UK R2 Builders club
 
     Results will be displayed on the attached LCD screen. Valid card IDs will
-    be sent to the R2 Builders driving course
+    be sent to the R2 Builders driving course.
+
+    Use TTGO LoRa32-OLED V1, 80MHz, 921600, None
 
 This is based on the example sketch for the Adafruit PN532 NFC/RFID 
 breakout boards
