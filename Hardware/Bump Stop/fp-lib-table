@@ -1,0 +1,3 @@
+(fp_lib_table
+  (lib (name "Bump Stop")(type KiCad)(uri "/home/daz/Source/r2_builders/droid_driving_course/Hardware/Bump Stop")(options "")(descr ""))
+)
