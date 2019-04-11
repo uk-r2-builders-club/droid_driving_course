@@ -3,10 +3,10 @@
 <head>
 	<title>R2 Builders Driving Course</title>
         <link rel="stylesheet" type="text/css" href="{{ url_for('static',filename='main.css') }}">
-        <link rel="stylesheet" href="https://www.w3schools.com/w3css/4/w3.css">
+        <link rel="stylesheet" href="{{ url_for('static',filename='w3.css') }}">
 	<link rel="shortcut icon" href="{{ url_for('static', filename='favicon.ico') }}">
-	<script type="text/javascript" src="//code.jquery.com/jquery-1.4.2.min.js"></script>
-        <script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/socket.io/1.3.5/socket.io.min.js"></script>
+	<script type="text/javascript" src="{{ url_for('static',filename='jquery-1.4.2.min.js') }}"></script>
+        <script type="text/javascript" src="{{ url_for('static',filename='socket.io.min.js') }}"></script>
         <script type="text/javascript" charset="utf-8">
 	$(document).ready(function() {
 		var num_gates = 0;
@@ -25,127 +25,152 @@
 
 
                 namespace = '/comms';
+		reload_contender();
+		reload_current();
+		reload_gates();
+		reload_results();
                 var socket = io.connect(location.protocol + '//' + document.domain + ':' + location.port + namespace);
 
 	        // Display log messages at the bottom of the screen
-                socket.on('my_response', function(msg) {
-                       $('.logs').append('<br>' + $('<div/>').text('Log # ' + msg.data).html());
-			$('.logs').scrollTop($('.logs')[0].scrollHeight);
-                });
-
-		// Reload the contender area
-	        socket.on('reload_contender', function(msg) {
-		       $.getJSON("/display/contender",
+                
+		function reload_contender() {
+			$.getJSON("/display/contender",
                                function (json) {
                                        var driver_image;
-				       var droid_image;
-				       var droid_details;
-				       driver_image = "<img src='/static/members/" + json.member_uid + ".jpg' height=200>";
-				       droid_image = "<img src='/static/droids/" + json.droid_uid + ".jpg' height=200>";
-				       droid_details = "<br />";
-				       droid_details += "Weight: " + json.weight + "<br />";
-				       droid_details += "Material: " + json.material + "<br />";
-				       droid_details += "Controls: " + json.transmitter_type + "<br />";
-				       droid_details += "<br />";
+                                       var droid_image;
+                                       var droid_details;
+                                       driver_image = "<img src='/static/members/" + json.member_uid + ".jpg' height=200>";
+                                       droid_image = "<img src='/static/droids/" + json.droid_uid + ".jpg' height=200>";
+                                       droid_details = "<br />";
+                                       droid_details += "Weight: " + json.weight + "<br />";
+                                       droid_details += "Material: " + json.material + "<br />";
+                                       droid_details += "Controls: " + json.transmitter_type + "<br />";
+                                       droid_details += "<br />";
                                        $('#driver_image').html(driver_image);
-				       $('#driver_name').html(json.member);
-				       $('#droid_image').html(droid_image);
-				       $('#droid_name').html(json.droid);
+                                       $('#driver_name').html(json.member);
+                                       $('#droid_image').html(droid_image);
+                                       $('#droid_name').html(json.droid);
                                        $('#droid_details').html(droid_details);
-                               });
-                });
+                               });	
+		}
 
-		// Reload the current run area
-                socket.on('reload_current', function(msg) {
-                       $.getJSON("/display/current",
+		function reload_current() {
+			$.getJSON("/display/current",
                                function (json) {
-				       var status_field = document.querySelector('status');
-				       var first_half_field = document.querySelector('first_half');
-				       var second_half_field = document.querySelector('second_half');
-				       var clock_time_field = document.querySelector('clock_time');
-				       var final_time_field = document.querySelector('final_time');
-				       var penalties_field = document.querySelector('penalties');
-				       var run_status = "Waiting to Start";
-				       switch (true) {
-					       case (json.start == null):
-						       run_status = "Waiting to Start";
-						       first_half_field.innerHTML = "";
-						       second_half_field.innerHTML = "";
-				                       clock_time_field.innerHTML = "";
-				                       final_time_field.innerHTML = "";
-				                       penalties_field.innerHTML = "";
-						       break;
-			                       case ((json.start != null && json.middle_stop == null) || json.middle_start != null && json.end == null):
-						       run_status = "Running";
-						       break;
-					       case (json.middle_stop != null && json.middle_start == null):
-						       run_status = "Paused";
-						       break;
-					       case (json.end != null):
-						       run_status = "Finished";
-						       console.log("Clock time: " + json.clock_time);
-						       console.log("Final time: " + json.final_time);
-						       clock_time_field.innerHTML = new Date(json.clock_time * 1000).toISOString().substr(11,8);
-						       final_time_field.innerHTML = new Date(json.final_time * 1000 ).toISOString().substr(11,8);
-						       break;
-				       }
-				       if ( json.start !=null && json.middle_stop != null) {
-					       start = new Date(json.start).valueOf();
-					       middle = new Date(json.middle_stop).valueOf();
-					       first_half_field.innerHTML = new Date(middle - start).toISOString().substr(11, 8);
-				       }
-				       if ( json.middle_start !=null && json.end != null) {
+                                       var status_field = document.querySelector('status');
+                                       var first_half_field = document.querySelector('first_half');
+                                       var second_half_field = document.querySelector('second_half');
+                                       var clock_time_field = document.querySelector('clock_time');
+                                       var final_time_field = document.querySelector('final_time');
+                                       var penalties_field = document.querySelector('penalties');
+                                       var run_status = "Waiting to Start";
+                                       switch (true) {
+                                               case (json.start == null):
+                                                       run_status = "Waiting to Start";
+                                                       first_half_field.innerHTML = "";
+                                                       second_half_field.innerHTML = "";
+                                                       clock_time_field.innerHTML = "";
+                                                       final_time_field.innerHTML = "";
+                                                       penalties_field.innerHTML = "";
+                                                       break;
+                                               case ((json.start != null && json.middle_stop == null) || json.middle_start != null && json.end == null):
+                                                       run_status = "Running";
+                                                       break;
+                                               case (json.middle_stop != null && json.middle_start == null):
+                                                       run_status = "Paused";
+                                                       break;
+                                               case (json.end != null):
+                                                       run_status = "Finished";
+                                                       console.log("Clock time: " + json.clock_time);
+                                                       console.log("Final time: " + json.final_time);
+                                                       clock_time_field.innerHTML = new Date(json.clock_time * 1000).toISOString().substr(11,8);
+                                                       final_time_field.innerHTML = new Date(json.final_time * 1000 ).toISOString().substr(11,8);
+                                                       break;
+                                       }
+					if ( json.start !=null && json.middle_stop != null) {
+                                               start = new Date(json.start).valueOf();
+                                               middle = new Date(json.middle_stop).valueOf();
+                                               first_half_field.innerHTML = new Date(middle - start).toISOString().substr(11, 8);
+                                       }
+                                       if ( json.middle_start !=null && json.end != null) {
                                                middle = new Date(json.middle_start).valueOf();
                                                end = new Date(json.end).valueOf();
                                                second_half_field.innerHTML = new Date(end - middle).toISOString().substr(11, 8);
                                        }
 
-				       status_field.innerHTML = run_status;
-				       penalties_field.innerHTML = json.num_penalties;
+                                       status_field.innerHTML = run_status;
+                                       penalties_field.innerHTML = json.num_penalties;
 
 
                                });
+
+
+		}
+
+		function reload_gates() {
+			$.getJSON("/display/current_gates",
+                               function (penalties, num) {
+                                       for (var i = 1; i < num_gates + 1; i++) {
+                                           var gate = document.getElementById('gate' + i);
+                                           if ( penalties[0][i] != "0" ) {
+                                                   gate.style.backgroundColor = "red";
+                                           } else {
+                                                   gate.style.backgroundColor = "green";
+                                           }
+
+                                       }
+                               });
+		}
+
+		function reload_results() {
+			$.getJSON("/display/results",
+                                function (json) {
+                                        var tbody;
+                                        var rows = 10;
+                                        tbody = "";
+                                        if (json.length < 10) {
+                                                rows = json.length;
+                                        }
+                                        for (var i = 0; i < rows; i++) {
+                                                tbody += "<tr>";
+                                                tbody += "<td>" + json[i].member + "</td>";
+                                                tbody += "<td>" + json[i].droid + "</td>";
+                                                tbody += "<td>" + new Date(json[i].first_half * 1000).toISOString().substr(11, 8) + "</td>";
+                                                tbody += "<td>" + new Date(json[i].second_half * 1000).toISOString().substr(11, 8) + "</td>";
+                                                tbody += "<td>" + new Date(json[i].clock_time * 1000).toISOString().substr(11, 8) + "</td>";
+                                                tbody += "<td>" + json[i].num_penalties + "</td>";
+                                                tbody += "<td>" + new Date(json[i].final_time * 1000).toISOString().substr(11, 8) + "</td>";
+                                                tbody += "</tr>";
+                                        }
+                                        $('#results_body').empty().append(tbody);
+                                });
+	
+		}
+
+		// Display log messages at the bottom of the screen
+		socket.on('my_response', function(msg) {
+                       $('.logs').append('<br>' + $('<div/>').text('Log # ' + msg.data).html());
+                        $('.logs').scrollTop($('.logs')[0].scrollHeight);
+                });
+
+		// Reload the contender area
+	        socket.on('reload_contender', function(msg) {
+			reload_contender();
+                });
+
+		// Reload the current run area
+                socket.on('reload_current', function(msg) {
+			reload_current();
                 });
 
 		// Reload the gates area
                 socket.on('reload_gates', function(msg) {
-                       $.getJSON("/display/current_gates",
-                               function (penalties, num) {
-				       for (var i = 1; i < num_gates + 1; i++) {
-				           var gate = document.getElementById('gate' + i);
-				           if ( penalties[0][i] != "0" ) {
-						   gate.style.backgroundColor = "red";
-					   } else {
-						   gate.style.backgroundColor = "green";
-					   }
-				       
-				       }
-                               });
+			reload_gates();
                 });
 
 		// Reload the results table
 	        socket.on('reload_results', function(msg) {
-		        $.getJSON("/display/results", 
-			        function (json) {
-				        var tbody;
-					var rows = 10;
-				        tbody = "";
-					if (json.length < 10) {
-						rows = json.length;
-					}
-        			        for (var i = 0; i < rows; i++) {
-				                tbody += "<tr>";
-                                                tbody += "<td>" + json[i].member + "</td>";
-                                                tbody += "<td>" + json[i].droid + "</td>";
-   				                tbody += "<td>" + new Date(json[i].first_half * 1000).toISOString().substr(11, 8) + "</td>";
-				                tbody += "<td>" + new Date(json[i].second_half * 1000).toISOString().substr(11, 8) + "</td>";
-				                tbody += "<td>" + new Date(json[i].clock_time * 1000).toISOString().substr(11, 8) + "</td>";
-						tbody += "<td>" + json[i].num_penalties + "</td>";
-                                                tbody += "<td>" + new Date(json[i].final_time * 1000).toISOString().substr(11, 8) + "</td>";
-				                tbody += "</tr>";
-                                        }
-			                $('#results_body').empty().append(tbody);
-                                });
+			reload_results();
                 });
 
         });

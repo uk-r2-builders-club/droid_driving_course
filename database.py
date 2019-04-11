@@ -7,7 +7,6 @@ from sqlite3 import Error
 db_location = "db/r2_course.db"
 sql_create_droids_table = """ CREATE TABLE IF NOT EXISTS droids (
                                         droid_uid integer PRIMARY KEY,
-                                        rfid text NULL,
                                         name text NOT NULL,
                                         member text NOT NULL,
                                         material text NULL,
@@ -17,7 +16,6 @@ sql_create_droids_table = """ CREATE TABLE IF NOT EXISTS droids (
 
 sql_create_members_table = """ CREATE TABLE IF NOT EXISTS members (
                                         member_uid integer PRIMARY KEY,
-                                        rfid text NULL,
                                         name text NOT NULL,
                                         email text NULL 
                                     ); """
@@ -58,9 +56,7 @@ def db_init():
         execute_sql(conn, sql_create_members_table)
         execute_sql(conn, sql_create_runs_table)
         execute_sql(conn, sql_create_penalties_table)
-        execute_sql(conn, "DROP TABLE gates")
-        execute_sql(conn, sql_create_gates_table)
-        load_gates(conn, "config/gates.csv")
+        load_gates("course/standard.csv")
     else:
         print("Error!")
     
@@ -74,12 +70,15 @@ def create_connection(db_file):
         print(e)
     return None
 
-def load_gates(conn, gates_csv):
+def load_gates(gates_csv):
     """ Load gate config """
     with open (gates_csv, 'rt') as fin:
         dr = csv.DictReader(fin)
         to_db = [(i['id'], i['type'], i['name'], i['penalty']) for i in dr]
 
+    conn = create_connection(db_location)
+    execute_sql(conn, "DROP TABLE gates")
+    execute_sql(conn, sql_create_gates_table)
     c = conn.cursor()
     c.executemany("INSERT INTO gates (id, type, name, penalty) VALUES (?, ?, ?, ?);", to_db)
     conn.commit()
@@ -196,8 +195,8 @@ def add_member(data):
     """ Add a member to the database """
     print("Adding: %s " % data)
     conn = create_connection(db_location)
-    sql = "INSERT INTO members(member_uid, rfid, name, email) VALUES({}, \"{}\", \"{}\", \"{}\");".format(
-            data['member_uid'], data['rfid'], data['forename'] + " " + data['surname'], data['email'])
+    sql = "INSERT INTO members(member_uid, name, email) VALUES({}, \"{}\", \"{}\");".format(
+            data['member_uid'], data['forename'] + " " + data['surname'], data['email'])
     execute_sql(conn, sql)
     return
 
@@ -217,8 +216,8 @@ def add_droid(data):
     """ Add a droid to the database """
     print("Adding: %s " % data)  
     conn = create_connection(db_location)
-    sql = "INSERT INTO droids(droid_uid, rfid, name, member, material, weight, transmitter_type) VALUES({}, \"{}\", \"{}\", {}, \"{}\", \"{}\", \"{}\");".format(
-            data['droid_uid'], data['rfid'], data['name'], data['member_uid'], data['material'], data['weight'], data['transmitter_type'])
+    sql = "INSERT INTO droids(droid_uid, name, member, material, weight, transmitter_type) VALUES({}, \"{}\", {}, \"{}\", \"{}\", \"{}\");".format(
+            data['droid_uid'], data['name'], data['member_uid'], data['material'], data['weight'], data['transmitter_type'])
     execute_sql(conn, sql)
     return
 
@@ -306,6 +305,42 @@ def list_runs():
             print(data)
         results.append(data)
     return json.dumps(results)
+
+def list_members():
+    results = []
+    conn = create_connection(db_location)
+    c = conn.cursor()
+    c.execute("SELECT * FROM members")
+    members = c.fetchall()
+    for member in members:
+        data = {}
+        if __debug__:
+            print("Member: %s " % member[0])
+        data['member_uid'] = member[0]
+        data['name'] = member[1]
+        if __debug__:
+            print(data)
+        results.append(data)
+    return json.dumps(results)
+
+def list_droids():
+    results = []
+    conn = create_connection(db_location)
+    c = conn.cursor()
+    c.execute("SELECT * FROM droids, members WHERE droids.member = members.member_uid")
+    droids = c.fetchall()
+    for droid in droids:
+        data = {}
+        if __debug__:
+            print("droid: %s " % droid[0])
+        data['droid_uid'] = droid[0]
+        data['droid_name'] = droid[1]
+        data['member_name'] = droid[7]
+        if __debug__:
+            print(data)
+        results.append(data)
+    return json.dumps(results)
+
 
 def delete_run(run_id):
     conn = create_connection(db_location)

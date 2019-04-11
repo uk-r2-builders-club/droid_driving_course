@@ -9,37 +9,29 @@
         <script type="text/javascript" src="{{ url_for('static',filename='socket.io.min.js') }}"></script>
         <script type="text/javascript" charset="utf-8">
 	$(document).ready(function() {
-
-		reload_results();
-
 		// Reload the results table
-		function reload_results() {
-			$.getJSON("/display/results",
-                                function (json) {
-                                        var tbody;
-                                        var rows = 30;
-                                        tbody = "";
-                                        if (json.length < 30) {
-                                                rows = json.length;
-                                        }
-                                        for (var i = 0; i < rows; i++) {
-                                                tbody += "<tr>";
+	        socket.on('reload_results', function(msg) {
+		        $.getJSON("/display/results", 
+			        function (json) {
+				        var tbody;
+					var rows = 30;
+				        tbody = "";
+					if (json.length < 30) {
+						rows = json.length;
+					}
+        			        for (var i = 0; i < rows; i++) {
+				                tbody += "<tr>";
                                                 tbody += "<td>" + json[i].member + "</td>";
                                                 tbody += "<td>" + json[i].droid + "</td>";
-                                                tbody += "<td>" + new Date(json[i].first_half * 1000).toISOString().substr(11, 8) + "</td>";
-                                                tbody += "<td>" + new Date(json[i].second_half * 1000).toISOString().substr(11, 8) + "</td>";
-                                                tbody += "<td>" + new Date(json[i].clock_time * 1000).toISOString().substr(11, 8) + "</td>";
-                                                tbody += "<td>" + json[i].num_penalties + "</td>";
+   				                tbody += "<td>" + new Date(json[i].first_half * 1000).toISOString().substr(11, 8) + "</td>";
+				                tbody += "<td>" + new Date(json[i].second_half * 1000).toISOString().substr(11, 8) + "</td>";
+				                tbody += "<td>" + new Date(json[i].clock_time * 1000).toISOString().substr(11, 8) + "</td>";
+						tbody += "<td>" + json[i].num_penalties + "</td>";
                                                 tbody += "<td>" + new Date(json[i].final_time * 1000).toISOString().substr(11, 8) + "</td>";
-                                                tbody += "</tr>";
+				                tbody += "</tr>";
                                         }
-                                        $('#results_body').empty().append(tbody);
+			                $('#results_body').empty().append(tbody);
                                 });
-
-		}
-
-	        socket.on('reload_results', function(msg) {
-			reload_results();
                 });
 
         });

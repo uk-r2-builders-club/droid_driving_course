@@ -17,6 +17,7 @@ import database
 
 configfile = str(Path.home()) + "/.r2_builders/course.ini"
 config = configparser.SafeConfigParser({'api_key': 'null',
+					'site_base': 'https://mot.r2djp.co.uk',
                                         'key': 'SECRET' })
 config.read(configfile)
 
@@ -27,13 +28,14 @@ if not os.path.isfile(configfile):
 
 defaults = config.defaults()
 
-Droid = namedtuple('Droid', 'droid_uid, rfid, member_uid, name, material, weight, transmitter_type')
-Driver = namedtuple('Driver', 'member_uid, rfid, name, email')
+Droid = namedtuple('Droid', 'droid_uid, member_uid, name, material, weight, transmitter_type')
+Driver = namedtuple('Driver', 'member_uid, name, email')
 
 api_key = defaults['api_key']
+site_base = defaults['site_base']
 
-current_droid = Droid(droid_uid=0, rfid="none", member_uid=0, name="none", material="none", weight="none", transmitter_type="none")
-current_member = Driver(member_uid=0, rfid="none", name="none", email="none")
+current_droid = Droid(droid_uid=0, member_uid=0, name="none", material="none", weight="none", transmitter_type="none")
+current_member = Driver(member_uid=0, name="none", email="none")
 current_run = 0
 
 def get_member_details(did):
@@ -87,6 +89,10 @@ def display(cmd):
             return gates
         if cmd == 'current_gates':
             return json.dumps(database.list_penalties(current_run))
+        if cmd == 'list_droids':
+            return database.list_droids()
+        if cmd == 'list_members':
+            return database.list_members()
     return "Ok"
 
 @app.route('/droid/<did>', methods=['GET'])
@@ -155,8 +161,8 @@ def run_cmd(cmd):
             socketio.emit('reload_results', {'data': 'reload results'}, namespace='/comms') 
         if cmd == 'RESET':
             current_run = 0
-            current_droid = Droid(droid_uid=0, rfid="none", member_uid=0, name="none", material="none", weight="none", transmitter_type="none")
-            current_member = Driver(member_uid=0, rfid="none", name="none", email="none")
+            current_droid = Droid(droid_uid=0, member_uid=0, name="none", material="none", weight="none", transmitter_type="none")
+            current_member = Driver(member_uid=0, name="none", email="none")
             socketio.emit('my_response', {'data': 'Resetting'}, namespace='/comms')
             socketio.emit('reload_results', {'data': 'reload results'}, namespace='/comms')
             socketio.emit('reload_contender', {'data': 'reload contender'}, namespace='/comms')
@@ -181,13 +187,14 @@ def clear_db():
 def refresh_members():
     if request.method == 'GET':
         database.clear_db("members")
-        uids = ast.literal_eval(urllib.request.urlopen("https://r2djp.co.uk/new_mot/api.php?api=" + api_key + "&request=list_member_uid").read().decode('utf-8').rstrip('\n'))
+        uids = ast.literal_eval(urllib.request.urlopen(site_base + "/api.php?api=" + api_key + "&request=list_member_uid").read().decode('utf-8').rstrip('\n'))
         if __debug__:
             print("UIDs: %s" % uids)
         for uid in uids:
-           member = json.loads(urllib.request.urlopen("https://r2djp.co.uk/new_mot/api.php?api=" + api_key + "&request=member&id=" + uid).read())
+           print("URL: %s" % site_base + "/api.php?api=" + api_key + "&request=member&id=" + uid)
+           member = json.loads(urllib.request.urlopen(site_base + "/api.php?api=" + api_key + "&request=member&id=" + uid).read().decode('utf-8'))
            database.add_member(member)
-           urllib.request.urlretrieve("https://r2djp.co.uk/new_mot/api.php?api=" + api_key + "&request=mug_shot&id=" + uid, "static/members/" + uid + ".jpg")
+           urllib.request.urlretrieve(site_base + "/api.php?api=" + api_key + "&request=mug_shot&id=" + uid, "static/members/" + uid + ".jpg")
         socketio.emit('my_response', {'data': '**ADMIN** Members list refreshed'}, namespace='/comms')
     return "Ok"
 
@@ -195,13 +202,13 @@ def refresh_members():
 def refresh_droids():
     if request.method == 'GET':
         database.clear_db("droids")
-        uids = ast.literal_eval(urllib.request.urlopen("https://r2djp.co.uk/new_mot/api.php?api=" + api_key + "&request=list_droid_uid").read().decode('utf-8').rstrip('\n'))
+        uids = ast.literal_eval(urllib.request.urlopen(site_base + "/api.php?api=" + api_key + "&request=list_droid_uid").read().decode('utf-8').rstrip('\n'))
         if __debug__:
             print("UIDs: %s" % uids)
         for uid in uids:
-           droid = json.loads(urllib.request.urlopen("https://r2djp.co.uk/new_mot/api.php?api=" + api_key + "&request=droid&id=" + uid).read())
+           droid = json.loads(urllib.request.urlopen(site_base + "/api.php?api=" + api_key + "&request=droid&id=" + uid).read().decode('utf-8'))
            database.add_droid(droid)
-           urllib.request.urlretrieve("https://r2djp.co.uk/new_mot/api.php?api=" + api_key + "&request=droid_shot&id=" + uid, "static/droids/" + uid + ".jpg")
+           urllib.request.urlretrieve(site_base + "/api.php?api=" + api_key + "&request=droid_shot&id=" + uid, "static/droids/" + uid + ".jpg")
         socketio.emit('my_response', {'data': '**ADMIN** Droids list refreshed'}, namespace='/comms')
     return "Ok"
 
@@ -209,6 +216,7 @@ def refresh_droids():
 def refresh_scoreboard():
     if request.method == 'GET':
         socketio.emit('my_response', {'data': '**ADMIN** Scoreboard refreshed'}, namespace='/comms')
+        socketio.emit('reload_contender', {'data': 'reload contender'}, namespace='/comms')
         socketio.emit('reload_results', {'data': 'reload results'}, namespace='/comms')
         socketio.emit('reload_current', {'data': 'reload current'}, namespace='/comms')
         socketio.emit('reload_gates', {'data': 'reload current'}, namespace='/comms')
@@ -222,7 +230,7 @@ def upload_runs():
         for result in results:
             if __debug__:
                 print("Uploading Run ID: %s" % result['id'])
-            url = "https://r2djp.co.uk/new_mot/api.php?api=" + api_key + "&request=insert_course_run&id=" + urllib.parse.quote(str(result), safe='', encoding=None, errors=None)
+            url = site_base + "/api.php?api=" + api_key + "&request=insert_course_run&id=" + urllib.parse.quote(str(result), safe='', encoding=None, errors=None)
             code = urllib.request.urlopen(url).read().decode('utf-8').rstrip('\n')
             print(code)
             if code != "00000":
