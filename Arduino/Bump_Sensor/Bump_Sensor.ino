@@ -4,6 +4,7 @@
 #include <Adafruit_SPITFT_Macros.h>
 
 #include <Adafruit_NeoPixel.h>
+#include <Adafruit_NeoMatrix.h>
 
 #include "config.h"
 #include <ESP8266WiFi.h>
@@ -19,6 +20,14 @@ unsigned int address;
 #define LED_PIN 2
 
 ESP8266WiFiMulti WiFiMulti;
+
+Adafruit_NeoMatrix matrix = Adafruit_NeoMatrix(3, 3, LED_PIN,
+  NEO_MATRIX_TOP     + NEO_MATRIX_LEFT +
+  NEO_MATRIX_ROWS + NEO_MATRIX_ZIGZAG,
+  NEO_GRB            + NEO_KHZ800);
+
+const uint16_t colors[] = {
+  matrix.Color(255, 0, 0), matrix.Color(0, 255, 0), matrix.Color(0, 0, 255) };
 
 void setup() {
   // put your setup code here, to run once
@@ -40,11 +49,18 @@ void setup() {
     address = address + (value << x);
   }
   // Make the address 1-16 rather than 0-15
-  address = address + 1;
 
   Serial.print("Address: ");
   Serial.println(address);
+  
+  pinMode(INPUT_PASS_PIN, INPUT);
+  pinMode(INPUT_FAIL_PIN, INPUT);
 
+  matrix.begin();
+  matrix.setBrightness(70);
+  matrix.fillScreen(matrix.Color(0, 0, 0));
+  matrix.show();
+  
   WiFi.mode(WIFI_STA);
   WiFi.hostname("bump_sensor");
   WiFiMulti.addAP(ssid, pass);
@@ -55,19 +71,27 @@ void setup() {
   }
   Serial.println("Connected!");
 
-  pinMode(INPUT_PASS_PIN, INPUT);
-  pinMode(INPUT_FAIL_PIN, INPUT);
-  pinMode(LED_PIN, OUTPUT);
-  
+
 }
 
 void passLights() {
-  
+  matrix.fillScreen(matrix.Color(0,255,0));
+  matrix.show();
+  delay(10000);
+  matrix.fillScreen(matrix.Color(0, 0, 0));
+  matrix.show();
 }
 
 void failLights() {
-  
+  matrix.fillScreen(matrix.Color(255,0,0));
+  matrix.show();
+  delay(10000);
+  matrix.fillScreen(matrix.Color(0, 0, 0));
+  matrix.show();
 }
+
+WiFiClient client;
+HTTPClient http;
 
 void loop() {
   int pass = digitalRead(INPUT_PASS_PIN);
@@ -75,20 +99,18 @@ void loop() {
   if (pass == LOW) {
      Serial.println("Pass hit");
      passLights();
-     delay(10000);
   } 
   if (fail == LOW) {
     Serial.println("Fail hit");
     String api_call = String((char*)api) + "gate/" + address + "/FAIL";
     Serial.print("API Call: ");
     Serial.println(api_call);
-    WiFiClient client;
-    HTTPClient http;
+
     http.begin(client, api_call);
     int httpCode = http.GET();
     http.end();
     failLights();
-    delay(10000);
   }
+  delay(10);
 
 }
