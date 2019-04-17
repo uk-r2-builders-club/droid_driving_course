@@ -1,3 +1,4 @@
+#!/usr/bin/python3
 # Example of detecting and reading a block from a MiFare NFC card.
 # Author: Tony DiCola & Roberto Laricchia
 # Copyright (c) 2015 Adafruit Industries
