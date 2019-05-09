@@ -65,13 +65,39 @@ void setup() {
   WiFi.hostname("bump_sensor");
   WiFiMulti.addAP(ssid, pass);
 
+  int timeout = 0;
   while (WiFiMulti.run() != WL_CONNECTED) {
      delay(1000);
      Serial.print("Connecting..");
+     pulseLights();
+     timeout ++;
+     if (timeout > 30) {
+        break;
+     }
   }
-  Serial.println("Connected!");
+  if ((WiFiMulti.run() == WL_CONNECTED)) {
+     Serial.println("Connected!");
+     startupLights();
+     matrix.fillScreen(matrix.Color(0, 0, 0));
+     matrix.show();
+  } else {
+     Serial.println("TIMEOUT!");
+     flashLights(10, 100);
+     matrix.fillScreen(matrix.Color(0, 0, 0));
+     matrix.show();
+  }
+}
 
-
+void flashLights(int count, int wait) {
+  int i;
+  for(i=0; i<count; i++) {
+     matrix.fillScreen(matrix.Color(255,0,0));
+     matrix.show();
+     delay(wait);
+     matrix.fillScreen(matrix.Color(0,0,0));
+     matrix.show();
+     delay(wait);
+  }
 }
 
 void passLights() {
@@ -90,6 +116,45 @@ void failLights() {
   matrix.show();
 }
 
+void startupLights() {
+  uint16_t i, j;
+
+  for(j=0; j<256; j++) {
+    for(i=0; i<9; i++) {
+      matrix.fillScreen(Wheel((i+j) & 255));
+    }
+    matrix.show();
+    delay(5);
+  }
+}
+
+uint32_t Wheel(byte WheelPos) {
+  WheelPos = 255 - WheelPos;
+  if(WheelPos < 85) {
+    return matrix.Color(255 - WheelPos * 3, 0, WheelPos * 3);
+  }
+  if(WheelPos < 170) {
+    WheelPos -= 85;
+    return matrix.Color(0, WheelPos * 3, 255 - WheelPos * 3);
+  }
+  WheelPos -= 170;
+  return matrix.Color(WheelPos * 3, 255 - WheelPos * 3, 0);
+}
+
+void pulseLights() {
+  uint16_t i, j;
+  for(i=0; i<50; i++) {
+    matrix.fillScreen(matrix.Color(i*5,0,0));
+    matrix.show();
+    delay(5);
+  }
+  for(j=50; j>0; j--) {
+    matrix.fillScreen(matrix.Color(j*5,0,0));
+    matrix.show();
+    delay(5);
+  }
+}
+
 WiFiClient client;
 HTTPClient http;
 
@@ -102,6 +167,7 @@ void loop() {
   } 
   if (fail == LOW) {
     Serial.println("Fail hit");
+    failLights();
     String api_call = String((char*)api) + "gate/" + address + "/FAIL";
     Serial.print("API Call: ");
     Serial.println(api_call);
@@ -109,7 +175,6 @@ void loop() {
     http.begin(client, api_call);
     int httpCode = http.GET();
     http.end();
-    failLights();
   }
   delay(10);
 
