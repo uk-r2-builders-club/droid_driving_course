@@ -1,11 +1,11 @@
 #include <Adafruit_NeoPixel.h>
 #include <Arduino.h>
+#include <Bounce2.h>
 
 #include <WiFi.h>
 #include <WiFiMulti.h>
 
 #include <HTTPClient.h>
-#include <WiFiClient.h>
 #include "config.h"
 
 #define USE_SERIAL Serial
@@ -15,11 +15,11 @@
 ////////////////////////////////////////////////////////////////////////////////
 #define NUMPIXELS 43 // Number of LEDs in a strip (some are actually 56, 
 //some 57 due to extra colon/decimal points)
-#define DATAPIN0 27 //digit 0 NeoPixel 60 strip far RIGHT
-#define DATAPIN1 33 //digit 1 (plus lower colon dot)
+#define DATAPIN0 14 //digit 0 NeoPixel 60 strip far RIGHT
+#define DATAPIN1 32 //digit 1 (plus lower colon dot)
 #define DATAPIN2 15 //digit 2 (plus upper colon dot)
-#define DATAPIN3 32 //digit 3 (plus decimal dot)
-#define DATAPIN4 15 //digit 4 far LEFT
+#define DATAPIN3 33 //digit 3 (plus decimal dot)
+#define DATAPIN4 27 //digit 4 far LEFT
 
 Adafruit_NeoPixel strip[] = { //here is the variable for the multiple strips
   Adafruit_NeoPixel(NUMPIXELS, DATAPIN0, NEO_GRB + NEO_KHZ800),
@@ -31,46 +31,67 @@ Adafruit_NeoPixel strip[] = { //here is the variable for the multiple strips
 const int bright = 200; //adjust brightness for all pixels 0-255 range,
 // 32 being pretty dim, 255 being full brightness
 
+#define DEBOUNCE 10
+#define DIGITS 5
+#define FLASHINTERVAL 1000
+
 #define RESETPIN 26
 #define STARTPIN 25
 #define PAUSEPIN 34
 #define RESUMEPIN 39
 #define STOPPIN 36
 
-WiFiMulti wifiMulti;
-WiFiClient client;
+#define NUM_BUTTONS 5
+const uint8_t BUTTON_PINS[NUM_BUTTONS] = { RESETPIN, STARTPIN, PAUSEPIN, RESUMEPIN, STOPPIN };
+
+WiFiMulti WiFiMulti;
 HTTPClient http;
 
-volatile int clockstate = 0; // 0 = stopped, 1 = running
+Bounce * buttons = new Bounce[NUM_BUTTONS];
+String pressed = "";
+char display_time[DIGITS + 1] = "00000";
+char last_display[DIGITS + 1] = "00000";
+
+unsigned long course_time;
+unsigned long last_flash;
+unsigned long start_time;
+int course_state = 0;
+int clock_colour = 1;
+int clock_flash = 0;
+int clock_flash_state = LOW;
 
 ////////////////////////////////////////////////////////////////////////////////
 
 void setup() {
 ////////////////////////////////////////////////////////////////////////////////
-
+  byte i;
   USE_SERIAL.begin(115200);
-
-  USE_SERIAL.println();
-  USE_SERIAL.println();
-  USE_SERIAL.println();
-  for(uint8_t t = 4; t > 0; t--) {
-        USE_SERIAL.printf("[SETUP] WAIT %d...\n", t);
-        USE_SERIAL.flush();
-        delay(1000);
+  
+  for (int i = 0; i < NUM_BUTTONS; i++) {
+    buttons[i].attach( BUTTON_PINS[i] , INPUT_PULLUP  );       //setup the bounce instance for the current button
+    buttons[i].interval(25);              // interval in ms
   }
-  wifiMulti.addAP(ssid, pass);
+  
+  WiFi.mode(WIFI_STA);
+  WiFiMulti.addAP(ssid, pass);
 
-  pinMode(RESETPIN, INPUT_PULLUP);
-  pinMode(STARTPIN, INPUT_PULLUP);
-  pinMode(PAUSEPIN, INPUT_PULLUP);
-  pinMode(RESUMEPIN, INPUT_PULLUP);
-  pinMode(STOPPIN, INPUT_PULLUP);
+  int timeout = 0;
+  while (WiFiMulti.run() != WL_CONNECTED) {
+     delay(1000);
+     Serial.print("Connecting..");
+     timeout ++;
+     if (timeout > 30) {
+        break;
+     }
+  }
+  if ((WiFiMulti.run() == WL_CONNECTED)) {
+     Serial.println("Connected!");
+  } else {
+     Serial.println("TIMEOUT!");
+  }
 
-  attachInterrupt(digitalPinToInterrupt(STARTPIN), start_clock, FALLING);
-  attachInterrupt(digitalPinToInterrupt(PAUSEPIN), pause_clock, FALLING);
-  attachInterrupt(digitalPinToInterrupt(RESUMEPIN), resume_clock, FALLING);
-  attachInterrupt(digitalPinToInterrupt(STOPPIN), stop_clock, FALLING);
-  attachInterrupt(digitalPinToInterrupt(RESETPIN), reset_clock, FALLING);
+  // allow reuse (if server supports it)
+  http.setReuse(true);
     
   delay(500); //pause a moment to let capacitors on board settle
   //NeoPixel array setup
@@ -83,9 +104,9 @@ void setup() {
   
   //flash an eight
   for(int t=0;t<5;t++){
-    digitWrite(t,8,0); //clear it
+    digitWrite(t,0,0); //clear it
     strip[t].show();
-    digitWrite(t,8,2); //display it
+    digitWrite(t,0,1); //display it
     strip[t].show();
   }
   delay(1500);
@@ -93,25 +114,121 @@ void setup() {
 ////////////////////////////////////////////////////////////////////////////////
 }
 
-////////////////////////////////////////////////////////////////////////////////
-void loop() { 
-  //this uses digitWrite() command to run through all numbers with one second 
-  //timing on each of the five digit panels in the display simultaneously
-  for(int i=0;i<10;i++){
-    for(int j=0;j<5;j++){
-      digitWrite(j, i, (i+1));
-      strip[j].show();
-    }
-    delay(1000); //one second intervals
-    for(int j=0;j<5;j++){ 
-      digitWrite(j, i, 0); //clears the digit between refreshes
-      strip[j].show();
-    }
 
+////////////////////////////////////////////////////////////////////////////////
+void loop() {   
+  for (int i=0; i < NUM_BUTTONS; i++) {
+    buttons[i].update();
   }
+  if (buttons[0].fell() ) {
+    pressed = "RESET";
+    course_time = 0;
+    course_state = 0;
+    clock_colour = 1;
+    clock_flash = 0;
+  }
+
+  if (buttons[1].fell() ) {
+    pressed = "START";
+    course_time = 0;
+    start_time = millis();
+    course_state = 1;
+    clock_colour = 2;
+    clock_flash = 0;
+  }
+
+  if (buttons[2].fell() && course_state == 1) {
+    pressed = "MIDDLE_WAIT";
+    course_time = millis() - start_time;
+    course_state = 2;
+    USE_SERIAL.print("First half time: ");
+    USE_SERIAL.println(course_time);
+    clock_colour = 2;
+    clock_flash = 1;
+  }
+
+  if (buttons[3].fell() && course_state == 2 ) {
+    pressed = "MIDDLE_START";
+    course_state = 3;
+    start_time = millis();
+    clock_colour = 2;
+    clock_flash = 0;
+  }
+
+  if (buttons[4].fell() && course_state == 3 ) {
+    pressed = "FINISH";
+    course_time = course_time + (millis() - start_time);
+    USE_SERIAL.print("Final time: ");
+    USE_SERIAL.println(course_time);    
+    course_state = 4;
+    clock_colour = 3;
+    clock_flash = 1;
+  }
+  
+  if (pressed != "") {
+    send_state(pressed, course_time);
+    pressed = "";
+  }
+
+  if (course_state == 1) {
+    sprintf(display_time, "%05d", (millis() - start_time)/100); // Uses millis() and displays 1/10 of a second
+  }
+  if (course_state == 3) {
+    sprintf(display_time, "%05d", ((millis() - start_time)+course_time)/100); // Uses millis() and displays 1/10 of a second
+  }
+
+  if (course_state == 1 || course_state == 3) { // Clock only runs in these two states
+    for (int i=0; i<DIGITS; i++) {
+      if (display_time[i] != last_display[i]) { // Only update a digit if it has changed.
+        int digit = display_time[i] - '0'; 
+        digitWrite(i, digit, clock_colour);
+        strip[i].show();
+        last_display[i] = display_time[i];
+        USE_SERIAL.print(display_time);
+        USE_SERIAL.print(" | Changing digit: ");
+        USE_SERIAL.print(i);
+        USE_SERIAL.print(" to: ");
+        USE_SERIAL.println(digit);
+      }
+    }
+  }
+
+  if (clock_flash == 1) {
+    unsigned long currentMillis = millis();
+    if (currentMillis - last_flash >= FLASHINTERVAL) {
+      last_flash = currentMillis;
+      if (clock_flash_state == LOW) {
+        for (int i=0; i<DIGITS; i++) {
+          digitWrite(i, display_time[i] - '0', 0);
+          strip[i].show();
+          clock_flash_state = HIGH;
+        }
+      } else {
+        for (int i=0; i<DIGITS; i++) {
+          digitWrite(i, display_time[i] - '0', clock_colour);
+          strip[i].show();
+          clock_flash_state = LOW;
+        }
+      }
+    }
+  }
+  
 }
 //END void loop()
 ////////////////////////////////////////////////////////////////////////////////
+
+void send_state(String state, unsigned long course_time) {
+  String api_call = String((char*)api) + "run/" + state + "/" + String(course_time, DEC);
+  if ((WiFiMulti.run() == WL_CONNECTED)) {
+      USE_SERIAL.print("API Call: ");
+      USE_SERIAL.println(api_call);
+      http.begin(api_call);
+      int httpCode = http.GET();
+      http.end();
+  } else {
+      USE_SERIAL.println("Failed to send");
+  }
+}
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -374,37 +491,3 @@ void segLight(char digit, int seg, int col){
 }
 //END void segLight()
 ////////////////////////////////////////////////////////////////////////////////
-
-void send_state(String state) {
-  String api_call = String((char*)api) + "run/" + state;
-  Serial.print("API Call: ");
-  Serial.println(api_call);
-  http.begin(client, api_call);
-  int httpCode = http.GET();
-  http.end();
-}
-
-void start_clock() {
-  clockstate = 1;
-  send_state("START");
-}
-
-void pause_clock() {
-  clockstate = 0;
-  send_state("MIDDLE_WAIT");
-}
-
-void resume_clock() {
-  clockstate = 1;
-  send_state("MIDDLE_START");
-}
-
-void stop_clock() {
-  clockstate = 0;
-  send_state("FINISH");
-}
-
-void reset_clock() {
-  clockstate = 0;
-  send_state("RESET");
-}

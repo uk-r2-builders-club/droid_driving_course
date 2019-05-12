@@ -13,6 +13,7 @@
 #include <WiFiClient.h>
 
 const byte address_bits[] =  { 13,12,14,16 };
+const int lighttime = 10000;
 unsigned int address;
 
 #define INPUT_PASS_PIN 4
@@ -103,15 +104,14 @@ void flashLights(int count, int wait) {
 void passLights() {
   matrix.fillScreen(matrix.Color(0,255,0));
   matrix.show();
-  delay(10000);
-  matrix.fillScreen(matrix.Color(0, 0, 0));
-  matrix.show();
 }
 
 void failLights() {
   matrix.fillScreen(matrix.Color(255,0,0));
   matrix.show();
-  delay(10000);
+}
+
+void offLights() {
   matrix.fillScreen(matrix.Color(0, 0, 0));
   matrix.show();
 }
@@ -164,17 +164,20 @@ void loop() {
   if (pass == LOW) {
      Serial.println("Pass hit");
      passLights();
+     delay(lighttime);
+     offLights();
   } 
   if (fail == LOW) {
-    Serial.println("Fail hit");
-    failLights();
-    String api_call = String((char*)api) + "gate/" + address + "/FAIL";
-    Serial.print("API Call: ");
-    Serial.println(api_call);
-
-    http.begin(client, api_call);
-    int httpCode = http.GET();
-    http.end();
+     Serial.println("Fail hit");
+     failLights();
+     String api_call = String((char*)api) + "gate/" + address + "/FAIL";
+     Serial.print("API Call: ");
+     Serial.println(api_call);
+     http.begin(client, api_call);
+     int httpCode = http.GET();
+     http.end();
+     delay(lighttime);
+     offLights();
   }
   delay(10);
 
