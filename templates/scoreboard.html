@@ -73,29 +73,25 @@
                                                        final_time_field.innerHTML = "";
                                                        penalties_field.innerHTML = "";
                                                        break;
-                                               case ((json.start != null && json.middle_stop == null) || json.middle_start != null && json.end == null):
+                                               case ((json.start != null && json.first_half_time == null) || json.middle_start != null && json.final_time == null):
                                                        run_status = "Running";
                                                        break;
-                                               case (json.middle_stop != null && json.middle_start == null):
+                                               case (json.first_half_time != null && json.middle_start == null):
                                                        run_status = "Paused";
                                                        break;
-                                               case (json.end != null):
+                                               case (json.final_time != null):
                                                        run_status = "Finished";
                                                        console.log("Clock time: " + json.clock_time);
                                                        console.log("Final time: " + json.final_time);
-                                                       clock_time_field.innerHTML = new Date(json.clock_time * 1000).toISOString().substr(11,8);
-                                                       final_time_field.innerHTML = new Date(json.final_time * 1000 ).toISOString().substr(11,8);
+                                                       clock_time_field.innerHTML = new Date(json.clock_time).toISOString().substr(14,8);
+                                                       final_time_field.innerHTML = new Date(json.final_time).toISOString().substr(14,8);
                                                        break;
                                        }
-					if ( json.start !=null && json.middle_stop != null) {
-                                               start = new Date(json.start).valueOf();
-                                               middle = new Date(json.middle_stop).valueOf();
-                                               first_half_field.innerHTML = new Date(middle - start).toISOString().substr(11, 8);
+					if ( json.first_half_time != null) {
+                                               first_half_field.innerHTML = new Date(json.first_half_time).toISOString().substr(14, 8);
                                        }
-                                       if ( json.middle_start !=null && json.end != null) {
-                                               middle = new Date(json.middle_start).valueOf();
-                                               end = new Date(json.end).valueOf();
-                                               second_half_field.innerHTML = new Date(end - middle).toISOString().substr(11, 8);
+                                       if ( json.second_half_time != null) {
+                                               second_half_field.innerHTML = new Date(json.second_half_time).toISOString().substr(14, 8);
                                        }
 
                                        status_field.innerHTML = run_status;
@@ -135,11 +131,11 @@
                                                 tbody += "<tr>";
                                                 tbody += "<td>" + json[i].member + "</td>";
                                                 tbody += "<td>" + json[i].droid + "</td>";
-                                                tbody += "<td>" + new Date(json[i].first_half * 1000).toISOString().substr(11, 8) + "</td>";
-                                                tbody += "<td>" + new Date(json[i].second_half * 1000).toISOString().substr(11, 8) + "</td>";
-                                                tbody += "<td>" + new Date(json[i].clock_time * 1000).toISOString().substr(11, 8) + "</td>";
+                                                tbody += "<td>" + new Date(json[i].first_half).toISOString().substr(14, 8) + "</td>";
+                                                tbody += "<td>" + new Date(json[i].second_half).toISOString().substr(14, 8) + "</td>";
+                                                tbody += "<td>" + new Date(json[i].clock_time).toISOString().substr(14, 8) + "</td>";
                                                 tbody += "<td>" + json[i].num_penalties + "</td>";
-                                                tbody += "<td>" + new Date(json[i].final_time * 1000).toISOString().substr(11, 8) + "</td>";
+                                                tbody += "<td>" + new Date(json[i].final_time).toISOString().substr(14, 8) + "</td>";
                                                 tbody += "</tr>";
                                         }
                                         $('#results_body').empty().append(tbody);

@@ -30,9 +30,7 @@ sql_create_gates_table = """ CREATE TABLE IF NOT EXISTS gates (
 sql_create_runs_table = """ CREATE TABLE IF NOT EXISTS runs (
                                         id integer PRIMARY KEY,
                                         start DATETIME DEFAULT CURRENT_TIMESTAMP,
-                                        middle_stop DATETIME NULL,
                                         middle_start DATETIME NULL,
-                                        end DATETIME NULL,
                                         droid_uid integer NOT NULL,
                                         member_uid integer NOT NULL,
                                         first_half_time integer NULL,
@@ -107,30 +105,30 @@ def clear_db(table):
         execute_sql(conn, "DELETE FROM runs")
         execute_sql(conn, "DELETE FROM penalties")
 
-def run(current, cmd, member_id, droid_id):
+def run(current, cmd, member_id, droid_id, milliseconds):
     conn = create_connection(db_location)
     c = conn.cursor()
     if cmd == 'START':
         c.execute("INSERT INTO runs (droid_uid, member_uid) VALUES (" + str(droid_id) + ", " + str(member_id) + ");")
         conn.commit()
         run_id = c.lastrowid
+        c.execute("DELETE FROM penalties WHERE run_id = " + str(run_id) + ";")
+        conn.commit()
         if __debug__:
             print("Run ID: %s" % run_id)
         return run_id
     if cmd == 'MIDDLE_WAIT':
-        c.execute("UPDATE runs SET middle_stop = current_timestamp WHERE id = " + str(current) + ";")
+        c.execute("UPDATE runs SET first_half_time = " + milliseconds + " WHERE id = " + str(current) + ";")
     if cmd == 'MIDDLE_START':
         c.execute("UPDATE runs SET middle_start = current_timestamp WHERE id = " + str(current) + ";")
     if cmd == 'FINISH':
         penalty_time = 0
-        # Course is finished, work out final time and penalties
-        c.execute("UPDATE runs SET end = current_timestamp WHERE id = " + str(current) + ";")
         # Work out clock time
-        c.execute("SELECT start, middle_stop, middle_start, end FROM runs WHERE id = " + str(current) + ";")
+        c.execute("SELECT first_half_time FROM runs WHERE id = " + str(current) + ";")
         row = c.fetchone()
-        first_half = (datetime.strptime(row[1], "%Y-%m-%d %H:%M:%S") - datetime.strptime(row[0], "%Y-%m-%d %H:%M:%S")).total_seconds()
-        second_half = (datetime.strptime(row[3], "%Y-%m-%d %H:%M:%S") - datetime.strptime(row[2], "%Y-%m-%d %H:%M:%S")).total_seconds()
-        clock_time = int(first_half + second_half)
+        first_half = int(row[0])
+        second_half = int(milliseconds) - int(row[0])
+        clock_time = int(milliseconds)
         if __debug__:
             print("First half: %s | Second half: %s | Total: %s" % (first_half, second_half, clock_time))
         # Work out penalties
@@ -144,7 +142,7 @@ def run(current, cmd, member_id, droid_id):
                 print("Penalty found on gate: %s | Penalty added: %s | Total Penalty time: %s" % (penalty[0], row[0], penalty_time))
         # Add penalties to clock_time and update database
         final_time = clock_time + penalty_time
-        c.execute("UPDATE runs SET first_half_time = " + str(first_half) + ", second_half_time = " + str(second_half) +
+        c.execute("UPDATE runs SET second_half_time = " + str(second_half) +
                 ", clock_time = " + str(clock_time) + ", final_time = " + str(final_time) + " WHERE id = " + str(current) + ";")
 
     conn.commit()
@@ -261,21 +259,21 @@ def list_results():
     results = []
     conn = create_connection(db_location)
     c = conn.cursor()
-    c.execute("SELECT * FROM runs WHERE final_time != \"\" ORDER BY final_time ASC;")
+    c.execute("SELECT id, start, droid_uid, member_uid, first_half_time, second_half_time, clock_time, final_time FROM runs WHERE final_time != \"\" ORDER BY final_time ASC;")
     runs = c.fetchall()
     for run in runs:
         data = {}
         if __debug__:
             print("Run: %s " % run[0])
-        member = get_member(str(run[6]))
-        droid = get_droid(str(run[5]))
+        member = get_member(str(run[3]))
+        droid = get_droid(str(run[2]))
         data['member'] = member['name']
         data['droid'] = droid['name']
         data['start'] = run[1]
-        data['first_half'] = run[7]
-        data['second_half'] = run[8]
-        data['clock_time'] = run[9]
-        data['final_time'] = run[10]
+        data['first_half'] = run[4]
+        data['second_half'] = run[5]
+        data['clock_time'] = run[6]
+        data['final_time'] = run[7]
         data['penalties'], data['num_penalties'] = list_penalties(run[0])
         if __debug__:
             print(data)
@@ -286,20 +284,20 @@ def list_runs():
     results = []
     conn = create_connection(db_location)
     c = conn.cursor()
-    c.execute("SELECT * FROM runs WHERE final_time != \"\" ORDER BY final_time ASC;")
+    c.execute("SELECT id, start, droid_uid, member_uid, first_half_time, second_half_time, clock_time, final_time FROM runs WHERE final_time != \"\" ORDER BY final_time ASC;")
     runs = c.fetchall()
     for run in runs:
         data = {}
         if __debug__:
             print("Run: %s " % run[0])
         data['id'] = run[0]
-        data['member_uid'] = run[6]
-        data['droid_uid'] = run[5]
+        data['member_uid'] = run[3]
+        data['droid_uid'] = run[2]
         data['start'] = run[1]
-        data['first_half'] = run[7]
-        data['second_half'] = run[8]
-        data['clock_time'] = run[9]
-        data['final_time'] = run[10]
+        data['first_half'] = run[4]
+        data['second_half'] = run[5]
+        data['clock_time'] = run[6]
+        data['final_time'] = run[7]
         data['penalties'], data['num_penalties'] = list_penalties(run[0])
         if __debug__:
             print(data)

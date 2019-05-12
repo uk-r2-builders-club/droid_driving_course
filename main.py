@@ -37,6 +37,7 @@ site_base = defaults['site_base']
 current_droid = Droid(droid_uid=0, member_uid=0, name="none", material="none", weight="none", transmitter_type="none")
 current_member = Driver(member_uid=0, name="none", email="none")
 current_run = 0
+current_state = 0
 
 def get_member_details(did):
     """ Pull member details using API """
@@ -97,13 +98,14 @@ def display(cmd):
 
 @app.route('/droid/<did>', methods=['GET'])
 def droid_register(did):
-    global current_droid, current_run
+    global current_droid, current_run, current_state
     if request.method == 'GET':
         data = json.dumps(database.get_droid(did))
         current_droid = json.loads(data, object_hook=lambda d: namedtuple('Droid', d.keys())(*d.values()))
         print(current_droid)
         print("Droid Registered: %s" % did)
         current_run = 0
+        current_state = 0
         socketio.emit('my_response', {'data': 'Droid Registered'}, namespace='/comms')
         socketio.emit('reload_contender', {'data': 'reload contender'}, namespace='/comms')
         socketio.emit('reload_results', {'data': 'reload results'}, namespace='/comms')
@@ -113,13 +115,14 @@ def droid_register(did):
 
 @app.route('/member/<did>', methods=['GET'])
 def member_register(did):
-    global current_member, current_run
+    global current_member, current_run, current_state
     if request.method == 'GET':
         data = json.dumps(database.get_member(did))
         current_member = json.loads(data, object_hook=lambda d: namedtuple('Driver', d.keys())(*d.values()))
         print(current_member)
         print("Driver Registered: %s" % did)
         current_run = 0
+        current_state = 0 
         socketio.emit('my_response', {'data': 'Driver Registered'}, namespace='/comms')
         socketio.emit('reload_contender', {'data': 'reload contender'}, namespace='/comms')
         socketio.emit('reload_results', {'data': 'reload results'}, namespace='/comms')
@@ -132,35 +135,46 @@ def gate_trigger(gid, value):
     global current_run
     if request.method == 'GET':
         if value == 'FAIL':
-            database.log_penalty(gid, current_run)
-            socketio.emit('my_response', {'data': 'PENALTY!!!'}, namespace='/comms')
-            socketio.emit('reload_gates', {'data': 'reload current'}, namespace='/comms')
+            if current_run != 0:
+               database.log_penalty(gid, current_run)
+               socketio.emit('my_response', {'data': 'PENALTY!!!'}, namespace='/comms')
+               socketio.emit('reload_gates', {'data': 'reload current'}, namespace='/comms')
+               socketio.emit('reload_current', {'data': 'reload current'}, namespace='/comms')
         else:
             print("Gate passed")
         print("Gate ID: %s | %s" % (gid, value))
     return "Ok"
 
-@app.route('/run/<cmd>', methods=['GET'])
-def run_cmd(cmd):
-    global current_run, current_member, current_droid
+@app.route('/run/<cmd>/<milliseconds>', methods=['GET'])
+def run_cmd(cmd, milliseconds):
+    global current_run, current_member, current_droid, current_state
     if request.method == 'GET':
         if __debug__:
             print("Current run: %s | Current Driver: %s | Current Droid: %s " % (current_run, current_member.member_uid, current_droid.droid_uid))
-        if cmd == 'START':
-            current_run = database.run(0, cmd, current_member.member_uid, current_droid.droid_uid)
+        if cmd == 'START' and current_member.member_uid != 0 and current_state == 0:
+            current_run = database.run(0, cmd, current_member.member_uid, current_droid.droid_uid, 0)
             socketio.emit('my_response', {'data': 'Start Run'}, namespace='/comms')
-        if cmd == 'MIDDLE_WAIT':
-            database.run(current_run, cmd, current_member.member_uid, current_droid.droid_uid)
+            socketio.emit('reload_current', {'data': 'reload current'}, namespace='/comms')
+            current_state = 1
+        if cmd == 'MIDDLE_WAIT' and current_state == 1:
+            database.run(current_run, cmd, current_member.member_uid, current_droid.droid_uid, milliseconds)
             socketio.emit('my_response', {'data': 'Halfway Rest'}, namespace='/comms')
-        if cmd == 'MIDDLE_START':
-            database.run(current_run, cmd, current_member.member_uid, current_droid.droid_uid)
+            socketio.emit('reload_current', {'data': 'reload current'}, namespace='/comms')
+            current_state = 2
+        if cmd == 'MIDDLE_START' and current_state == 2:
+            database.run(current_run, cmd, current_member.member_uid, current_droid.droid_uid, 0)
             socketio.emit('my_response', {'data': 'Continuing Run'}, namespace='/comms')
-        if cmd == 'FINISH':
-            database.run(current_run, cmd, current_member.member_uid, current_droid.droid_uid)
+            socketio.emit('reload_current', {'data': 'reload current'}, namespace='/comms')
+            current_state = 3
+        if cmd == 'FINISH' and current_state == 3:
+            database.run(current_run, cmd, current_member.member_uid, current_droid.droid_uid, milliseconds)
             socketio.emit('my_response', {'data': 'Finish!'}, namespace='/comms')
             socketio.emit('reload_results', {'data': 'reload results'}, namespace='/comms') 
+            socketio.emit('reload_current', {'data': 'reload current'}, namespace='/comms')
+            current_state = 4
         if cmd == 'RESET':
             current_run = 0
+            current_state = 0
             current_droid = Droid(droid_uid=0, member_uid=0, name="none", material="none", weight="none", transmitter_type="none")
             current_member = Driver(member_uid=0, name="none", email="none")
             socketio.emit('my_response', {'data': 'Resetting'}, namespace='/comms')
