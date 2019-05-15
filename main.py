@@ -14,6 +14,7 @@ from future import standard_library
 from flask import Flask, request, render_template
 from flask_socketio import SocketIO, emit
 import database 
+import broadcast
 
 configfile = str(Path.home()) + "/.r2_builders/course.ini"
 config = configparser.SafeConfigParser({'api_key': 'null',
@@ -46,6 +47,8 @@ def get_member_details(did):
 app = Flask(__name__, template_folder='templates')
 app.config['key'] = defaults['key']
 socketio = SocketIO(app)
+broadcast = broadcast.BroadCaster()
+# broadcast.broadcast_message(b'rainbow')
 
 
 @app.route('/')
@@ -171,6 +174,8 @@ def run_cmd(cmd, milliseconds):
             socketio.emit('my_response', {'data': 'Finish!'}, namespace='/comms')
             socketio.emit('reload_results', {'data': 'reload results'}, namespace='/comms') 
             socketio.emit('reload_current', {'data': 'reload current'}, namespace='/comms')
+            if database.is_top(current_run) == "yes":
+                broadcast.broadcast_message(b'rainbow')
             current_state = 4
         if cmd == 'RESET':
             current_run = 0
@@ -182,6 +187,7 @@ def run_cmd(cmd, milliseconds):
             socketio.emit('reload_contender', {'data': 'reload contender'}, namespace='/comms')
             socketio.emit('reload_current', {'data': 'reload current'}, namespace='/comms')
             socketio.emit('reload_gates', {'data': 'reload current'}, namespace='/comms')
+            broadcast.broadcast_message(b'reset')
         socketio.emit('reload_current', {'data': 'reload current'}, namespace='/comms')
     return "Ok"
 

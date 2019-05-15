@@ -165,6 +165,20 @@ def current_run(run_id):
     conn.close()
     return run
 
+def is_top(run_id):
+    """ Checks if run_id is the top score """
+    conn = create_connection(db_location)
+    c = conn.cursor()
+    c.execute("SELECT id from runs WHERE final_time != \"\" order by final_time ASC LIMIT 1")
+    result = c.fetchone()
+    if __debug__:
+        print(result)
+    if result[0] != run_id:
+        return "no"
+    else:
+        return "yes" 
+       
+
 def log_penalty(gate_id, run_id):
     conn = create_connection(db_location)
     if conn is not None:
