@@ -11,15 +11,22 @@
 #include <ESP8266WiFiMulti.h>
 #include <ESP8266HTTPClient.h>
 #include <WiFiClient.h>
+#include <WiFiUdp.h>
+#include <ArduinoOTA.h>
 
 const byte address_bits[] =  { 13,12,14,16 };
 const int lighttime = 10000;
 unsigned int address;
+unsigned int localPort = 8888;
+char packetBuffer[64]; //buffer to hold incoming packet,
+char  ReplyBuffer[] = "acknowledged\r\n";       // a string to send back
 
 #define INPUT_PASS_PIN 4
 #define INPUT_FAIL_PIN 0
 #define LED_PIN 2
+#define CELEBRATION 10
 
+WiFiUDP Udp;
 ESP8266WiFiMulti WiFiMulti;
 
 Adafruit_NeoMatrix matrix = Adafruit_NeoMatrix(3, 3, LED_PIN,
@@ -61,9 +68,11 @@ void setup() {
   matrix.setBrightness(70);
   matrix.fillScreen(matrix.Color(0, 0, 0));
   matrix.show();
-  
+
+  char sensor_name[20];
+  sprintf(sensor_name, "bump_sensor%02d", address);
   WiFi.mode(WIFI_STA);
-  WiFi.hostname("bump_sensor");
+  WiFi.hostname(sensor_name);
   WiFiMulti.addAP(ssid, pass);
 
   int timeout = 0;
@@ -87,6 +96,27 @@ void setup() {
      matrix.fillScreen(matrix.Color(0, 0, 0));
      matrix.show();
   }
+  Udp.begin(localPort);
+
+  ArduinoOTA.setHostname(sensor_name);
+  ArduinoOTA.onStart([]() {
+    Serial.println("Start");
+  });
+  ArduinoOTA.onEnd([]() {
+    Serial.println("\nEnd");
+  });
+  ArduinoOTA.onProgress([](unsigned int progress, unsigned int total) {
+    Serial.printf("Progress: %u%%\r", (progress / (total / 100)));
+  });
+  ArduinoOTA.onError([](ota_error_t error) {
+    Serial.printf("Error[%u]: ", error);
+    if (error == OTA_AUTH_ERROR) Serial.println("Auth Failed");
+    else if (error == OTA_BEGIN_ERROR) Serial.println("Begin Failed");
+    else if (error == OTA_CONNECT_ERROR) Serial.println("Connect Failed");
+    else if (error == OTA_RECEIVE_ERROR) Serial.println("Receive Failed");
+    else if (error == OTA_END_ERROR) Serial.println("End Failed");
+  });
+  ArduinoOTA.begin();
 }
 
 void flashLights(int count, int wait) {
@@ -159,6 +189,7 @@ WiFiClient client;
 HTTPClient http;
 
 void loop() {
+  ArduinoOTA.handle();
   int pass = digitalRead(INPUT_PASS_PIN);
   int fail = digitalRead(INPUT_FAIL_PIN);
   if (pass == LOW) {
@@ -167,6 +198,22 @@ void loop() {
      delay(lighttime);
      offLights();
   } 
+
+  int packetSize = Udp.parsePacket();
+  if (packetSize) {
+    // read the packet into packetBufffer
+    Udp.read(packetBuffer, 64);
+    Serial.println("UDP Broadcast received. Contents:");
+    Serial.println(packetBuffer);
+    if (strcmp(packetBuffer, "rainbow") == 0) {
+      for (int c = 0; c < CELEBRATION; c++) {
+        startupLights();
+        matrix.fillScreen(matrix.Color(0, 0, 0));
+        matrix.show();
+      }
+    }
+  }
+  
   if (fail == LOW) {
      Serial.println("Fail hit");
      failLights();
