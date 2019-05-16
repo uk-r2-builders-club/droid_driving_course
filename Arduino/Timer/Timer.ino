@@ -11,6 +11,7 @@
 #include <WiFi.h>
 #include <WiFiMulti.h>
 #include <WiFiUdp.h>
+#include <ArduinoOTA.h>
 
 #include <HTTPClient.h>
 #include "config.h"
@@ -131,7 +132,7 @@ void setup() {
      delay(1000);
      Serial.print("Connecting..");
      timeout ++;
-     if (timeout > 30) {
+     if (timeout > 120) {
         break;
      }
   }
@@ -143,6 +144,26 @@ void setup() {
   }
     http.setReuse(true);
   Udp.begin(localPort);
+
+  ArduinoOTA.setHostname("timer");
+  ArduinoOTA.onStart([]() {
+    Serial.println("Start");
+  });
+  ArduinoOTA.onEnd([]() {
+    Serial.println("\nEnd");
+  });
+  ArduinoOTA.onProgress([](unsigned int progress, unsigned int total) {
+    Serial.printf("Progress: %u%%\r", (progress / (total / 100)));
+  });
+  ArduinoOTA.onError([](ota_error_t error) {
+    Serial.printf("Error[%u]: ", error);
+    if (error == OTA_AUTH_ERROR) Serial.println("Auth Failed");
+    else if (error == OTA_BEGIN_ERROR) Serial.println("Begin Failed");
+    else if (error == OTA_CONNECT_ERROR) Serial.println("Connect Failed");
+    else if (error == OTA_RECEIVE_ERROR) Serial.println("Receive Failed");
+    else if (error == OTA_END_ERROR) Serial.println("End Failed");
+  });
+  ArduinoOTA.begin();
 //END void setup()
 ////////////////////////////////////////////////////////////////////////////////
 }
@@ -163,6 +184,15 @@ void loop() {
     if (strcmp(packetBuffer, "rainbow") == 0) {
       for (int c = 0; c < CELEBRATION; c++) {
         rainbowLights();
+      }
+    } else if (strcmp(packetBuffer, "reset") == 0) {
+      sprintf(display_time, "00000");
+      course_time = 0;
+      course_state = 0;
+      clock_colour = 1;
+      clock_flash = 0;
+      for (int d = 0; d<DIGITS; d++) {
+        digitWrite(d, display_time[d] - '0', clock_colour);
       }
     }
   }
