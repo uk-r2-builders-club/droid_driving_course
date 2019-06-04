@@ -1,0 +1,138 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+	<title>R2 Builders Driving Course</title>
+        <link rel="stylesheet" type="text/css" href="{{ url_for('static',filename='main.css') }}">
+        <link rel="stylesheet" href="{{ url_for('static',filename='w3.css') }}">
+	<link rel="shortcut icon" href="{{ url_for('static', filename='favicon.ico') }}">
+	<script type="text/javascript" src="{{ url_for('static',filename='jquery-1.4.2.min.js') }}"></script>
+        <script type="text/javascript" src="{{ url_for('static',filename='socket.io.min.js') }}"></script>
+        <script type="text/javascript" charset="utf-8">
+        function register(type, uid) {
+             var xhttp = new XMLHttpRequest();
+             var base_url = window.location.protocol + "//" + window.location.hostname + ":" + window.location.port;
+             var call_url = base_url + "/" + type + "/" + uid;
+             console.log(call_url);
+
+             xhttp.open("GET", call_url, true);
+             xhttp.send();
+        }
+
+	$(document).ready(function() {
+                namespace = '/comms';
+		reload_contender();
+		reload_members();
+                reload_droids();
+                var socket = io.connect(location.protocol + '//' + document.domain + ':' + location.port + namespace);
+
+	        // Display log messages at the bottom of the screen
+                
+		function reload_contender() {
+			$.getJSON("/display/contender",
+                               function (json) {
+                                       var driver_image;
+                                       var droid_image;
+                                       var droid_details;
+                                       driver_image = "<img src='/static/members/" + json.member_uid + ".jpg' height=200>";
+                                       droid_image = "<img src='/static/droids/" + json.droid_uid + ".jpg' height=200>";
+                                       droid_details = "<br />";
+                                       droid_details += "Weight: " + json.weight + "<br />";
+                                       droid_details += "Material: " + json.material + "<br />";
+                                       droid_details += "Controls: " + json.transmitter_type + "<br />";
+                                       droid_details += "<br />";
+                                       $('#driver_image').html(driver_image);
+                                       $('#driver_name').html(json.member);
+                                       $('#droid_image').html(droid_image);
+                                       $('#droid_name').html(json.droid);
+                                       $('#droid_details').html(droid_details);
+                               });	
+		}
+
+                function reload_members() {
+                        $.getJSON("/display/members",
+                                function (json) {
+                                        var tbody;
+                                        var rows = json.length;
+                                        tbody = "";
+                                        for (var i = 0; i < rows; i++) {
+                                                tbody += "<tr>";
+                                                tbody += "<td>" + json[i].name + "</td>";
+                                                tbody += "<td><input type=button value=Register onclick=\"register('member', "+ json[i].member_uid + ")\"></td>";
+                                                tbody += "</tr>";
+                                        }
+                                        $('#members_body').empty().append(tbody);
+                                });
+
+                }
+ 
+                function reload_droids() {
+                        $.getJSON("/display/droids",
+                                function (json) {
+                                        var tbody;
+                                        var rows = json.length;
+                                        tbody = "";
+                                        for (var i = 0; i < rows; i++) {
+                                                tbody += "<tr>";
+                                                tbody += "<td>" + json[i].droid_name;
+                                                tbody += " (" + json[i].member_name + ")</td>";
+                                                tbody += "<td><input type=button value=Register onclick=\"register('droid', "+ json[i].droid_uid + ")\"></td>";
+                                                tbody += "</tr>";
+                                        }
+                                        $('#droids_body').empty().append(tbody);
+                                });
+
+                }
+
+		// Display log messages at the bottom of the screen
+		socket.on('my_response', function(msg) {
+                       $('.logs').append('<br>' + $('<div/>').text('Log # ' + msg.data).html());
+                        $('.logs').scrollTop($('.logs')[0].scrollHeight);
+                });
+
+		// Reload the contender area
+	        socket.on('reload_contender', function(msg) {
+			reload_contender();
+                });
+
+});
+</script>
+</head>
+<body>
+	<div class="members-grid">
+		<div class="logo"><img src="/static/r2_builders_logo.jpeg" height=225></div>
+		<div class="contender">
+                        <table class=contender_table>
+                                <tr>
+                                        <td id=driver_image>Driver Image</td>
+                                        <td id=droid_image>Droid Image</td>
+                                        <td rowspan=2 id=droid_details>Droid Details</td>
+                                </tr>
+				<tr>
+					<td id=driver_name>Name</td>
+					<td id=droid_name>Droid Name</td>
+				</tr>
+                        </table>
+                </div>
+                <div class="members">
+                        <h2>Members</h2>
+                        <table class="members_table">
+                                <tbody id="members_body">
+                                </tbody>
+                        </table>
+                </div>
+                <div class="droids">
+                        <h2>Droids</h2>
+                        <table class="droids_table">
+                                <tbody id="droids_body">
+                                </tbody>
+                        </table>
+                </div>
+		<div class="logs">
+</div>
+	</div>
+        </div>
+        </div>
+</body>
+</html>
+
+

@@ -3,10 +3,12 @@
 <head>
 	<title>R2 Builders Driving Course</title>
         <link rel="stylesheet" type="text/css" href="{{ url_for('static',filename='main.css') }}">
+        <link rel="stylesheet" type="text/css" href="{{ url_for('static',filename='fireworks.css') }}">
         <link rel="stylesheet" href="{{ url_for('static',filename='w3.css') }}">
 	<link rel="shortcut icon" href="{{ url_for('static', filename='favicon.ico') }}">
 	<script type="text/javascript" src="{{ url_for('static',filename='jquery-1.4.2.min.js') }}"></script>
         <script type="text/javascript" src="{{ url_for('static',filename='socket.io.min.js') }}"></script>
+        <script type="text/javascript" src="{{ url_for('static',filename='fireworks.js') }}"></script>
         <script type="text/javascript" charset="utf-8">
 	$(document).ready(function() {
 		var num_gates = 0;
@@ -169,10 +171,37 @@
 			reload_results();
                 });
 
-        });
-        </script>
+                // Do special display
+                socket.on('special_display', function(msg) {
+                        document.body.style.backgroundColor = "black";
+                        switch(msg.data) {
+                            case "toprun":
+                                for(var i=20; i--;){
+                                    setTimeout('createFirework(30,200,8,null,null,null,null,null,Math.random()>0.5,true)',(i+1)*(1+parseInt(Math.random()*750)));
+                                }
+                                var gif_num = Math.floor(Math.random() * 3) + 1;
+                                $('.messageContainer').html('<div class=specialText>TOP RUN<p><img src=/static/images/toprun/' + gif_num + '.gif></div>');
+                                break;
+                            case "slow":
+                                $('.messageContainer').html('<div class=specialText>SLOW COACH<p><img src=/static/images/slow/1.gif></div>');
+                                break;
+                            case "pinball":
+                                $('.messageContainer').html('<div class=specialText>PINBALL DROID<p><img src=/static/images/pinball/1.gif></div>');
+                                break;
+                        }
+                        setTimeout(function(){document.location.reload()}, 10000);
+                });
+
+});
+</script>
 </head>
 <body>
+<div id="fireworks-template">
+ <div id="fw" class="firework"></div>
+ <div id="fp" class="fireworkParticle"><img src="{{ url_for('static',filename='particles.gif') }}" alt="" /></div>
+</div>
+        <div id="fireContainer">
+        <div class="messageContainer">
 	<div class="grid-container">
 		<div class="logo"><img src="/static/r2_builders_logo.jpeg" height=225></div>
 		<div class="contender">
@@ -211,8 +240,11 @@
 				</tbody>
 			</table>
 		</div>
-		<div class="logs"></div>
+		<div class="logs">
+</div>
 	</div>
+        </div>
+        </div>
 </body>
 </html>
 

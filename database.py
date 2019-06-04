@@ -11,13 +11,15 @@ sql_create_droids_table = """ CREATE TABLE IF NOT EXISTS droids (
                                         member text NOT NULL,
                                         material text NULL,
                                         weight text NULL,
-                                        transmitter_type text NULL
+                                        transmitter_type text NULL,
+                                        new boolean NO
                                     ); """
 
 sql_create_members_table = """ CREATE TABLE IF NOT EXISTS members (
                                         member_uid integer PRIMARY KEY,
                                         name text NOT NULL,
-                                        email text NULL 
+                                        email text NULL,
+                                        new boolean NO
                                     ); """
 
 sql_create_gates_table = """ CREATE TABLE IF NOT EXISTS gates (
@@ -207,8 +209,8 @@ def add_member(data):
     """ Add a member to the database """
     print("Adding: %s " % data)
     conn = create_connection(db_location)
-    sql = "INSERT INTO members(member_uid, name, email) VALUES({}, \"{}\", \"{}\");".format(
-            data['member_uid'], data['forename'] + " " + data['surname'], data['email'])
+    sql = "INSERT INTO members(member_uid, name, email, new) VALUES({}, \"{}\", \"{}\", \"{}\");".format(
+            data['member_uid'], data['forename'] + " " + data['surname'], data['email'], data['new'])
     execute_sql(conn, sql)
     return
 
@@ -228,8 +230,8 @@ def add_droid(data):
     """ Add a droid to the database """
     print("Adding: %s " % data)  
     conn = create_connection(db_location)
-    sql = "INSERT INTO droids(droid_uid, name, member, material, weight, transmitter_type) VALUES({}, \"{}\", {}, \"{}\", \"{}\", \"{}\");".format(
-            data['droid_uid'], data['name'], data['member_uid'], data['material'], data['weight'], data['transmitter_type'])
+    sql = "INSERT INTO droids(droid_uid, name, member, material, weight, transmitter_type, new) VALUES({}, \"{}\", \"{}\", \"{}\", \"{}\", \"{}\", \"{}\");".format(
+            data['droid_uid'], data['name'], data['member_uid'], data['material'], data['weight'], data['transmitter_type'], data['new'])
     execute_sql(conn, sql)
     return
 
@@ -347,7 +349,7 @@ def list_droids():
             print("droid: %s " % droid[0])
         data['droid_uid'] = droid[0]
         data['droid_name'] = droid[1]
-        data['member_name'] = droid[7]
+        data['member_name'] = droid[8]
         if __debug__:
             print(data)
         results.append(data)

@@ -67,6 +67,10 @@ def scoreboard():
 def results():
     return render_template('results.html', async_mode=socketio.async_mode)
 
+@app.route('/contenders')
+def contenders():
+    return render_template('contenders.html', async_mode=socketio.async_mode)
+
 
 @app.route('/display/<cmd>')
 def display(cmd):
@@ -93,9 +97,9 @@ def display(cmd):
             return gates
         if cmd == 'current_gates':
             return json.dumps(database.list_penalties(current_run))
-        if cmd == 'list_droids':
+        if cmd == 'droids':
             return database.list_droids()
-        if cmd == 'list_members':
+        if cmd == 'members':
             return database.list_members()
     return "Ok"
 
@@ -174,8 +178,19 @@ def run_cmd(cmd, milliseconds):
             socketio.emit('my_response', {'data': 'Finish!'}, namespace='/comms')
             socketio.emit('reload_results', {'data': 'reload results'}, namespace='/comms') 
             socketio.emit('reload_current', {'data': 'reload current'}, namespace='/comms')
+            run_details = database.current_run(current_run)
+            if __debug__:
+                print("**** Run Details: %s" % run_details)
             if database.is_top(current_run) == "yes":
                 broadcast.broadcast_message(b'rainbow')
+                socketio.emit('special_display', {'data': 'toprun'}, namespace='/comms')
+                socketio.emit('my_response', {'data': '**** TOP RUN ****'}, namespace='/comms')
+            if run_details["final_time"] > 120000:
+                socketio.emit('special_display', {'data': 'slow'}, namespace='/comms')
+                socketio.emit('my_response', {'data': '**** SLOOOOOOOOOOW ****'}, namespace='/comms')
+            if run_details["num_penalties"] > 6:
+                socketio.emit('special_display', {'data': 'pinball'}, namespace='/comms')
+                socketio.emit('my_response', {'data': '**** PINBALL DROID ****'}, namespace='/comms')
             current_state = 4
         if cmd == 'RESET':
             current_run = 0
@@ -195,6 +210,13 @@ def run_cmd(cmd, milliseconds):
 def admin():
     return render_template('admin.html', async_mode=socketio.async_mode)
 
+@app.route('/admin/display/<cmd>', methods=['GET'])
+def special_display(cmd):
+    if request.method == 'GET':
+        socketio.emit('my_response', {'data': '**ADMIN** Special Display'}, namespace='/comms')
+        socketio.emit('special_display', {'data': cmd}, namespace='/comms')
+    return "Ok"
+
 @app.route('/admin/clear_db', methods=['GET'])
 def clear_db():
     if request.method == 'GET':
@@ -213,8 +235,9 @@ def refresh_members():
         for uid in uids:
            print("URL: %s" % site_base + "/api.php?api=" + api_key + "&request=member&id=" + uid)
            member = json.loads(urllib.request.urlopen(site_base + "/api.php?api=" + api_key + "&request=member&id=" + uid).read().decode('utf-8'))
+           member['new'] = 'no'
            database.add_member(member)
-           urllib.request.urlretrieve(site_base + "/api.php?api=" + api_key + "&request=mug_shot&id=" + uid, "static/members/" + uid + ".jpg")
+           # urllib.request.urlretrieve(site_base + "/api.php?api=" + api_key + "&request=mug_shot&id=" + uid, "static/members/" + uid + ".jpg")
         socketio.emit('my_response', {'data': '**ADMIN** Members list refreshed'}, namespace='/comms')
     return "Ok"
 
@@ -227,8 +250,9 @@ def refresh_droids():
             print("UIDs: %s" % uids)
         for uid in uids:
            droid = json.loads(urllib.request.urlopen(site_base + "/api.php?api=" + api_key + "&request=droid&id=" + uid).read().decode('utf-8'))
+           droid['new'] = 'no'
            database.add_droid(droid)
-           urllib.request.urlretrieve(site_base + "/api.php?api=" + api_key + "&request=droid_shot&id=" + uid, "static/droids/" + uid + ".jpg")
+           # urllib.request.urlretrieve(site_base + "/api.php?api=" + api_key + "&request=droid_shot&id=" + uid, "static/droids/" + uid + ".jpg")
         socketio.emit('my_response', {'data': '**ADMIN** Droids list refreshed'}, namespace='/comms')
     return "Ok"
 

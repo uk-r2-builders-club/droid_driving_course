@@ -1,3 +1,37 @@
+@font-face {
+    font-family: StarWars;
+    src: url(/static/fonts/Rebellion.otf);
+}
+@font-face {
+    font-family: AureBesh;
+    src: url(/static/fonts/Aurebesh.otf);
+}
+
+.messageContainer {
+  position: fixed;
+  width: 100%;
+  height: 100%;
+}
+
+.specialText {
+  height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  color: blue;
+  font-family: StarWars;
+  font-size: 10vw;
+}
+
+
+canvas {
+    z-index: 100;
+}
+
+html, body {
+    height: 100%;
+}
+
 table {
         border: 1px solid black;
 	border-collapse: collapse;
@@ -20,7 +54,17 @@ table.contender_table tr,td,th {
 	border: 0px;
 }
 
+table.contender_table th {
+        font-family: StarWars;
 
+}
+
+.members-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: 230px auto 75px;
+  grid-template-areas: "logo contender" "members droids" "logs logs";
+}
 
 .grid-container {
   display: grid;
@@ -55,6 +99,32 @@ table.contender_table tr,td,th {
 	height: 100%;
 	overflow:hidden;
 }
+
+table.members tr,td,th {
+        text-align: left;
+        border: 0px;
+}
+
+table.droids tr,td,th {
+        text-align: left;
+        border: 0px;
+}
+
+
+.members { grid-area: members;
+        height: 100%;
+        max-height: 500px;
+        padding: 2px;
+        overflow-y: scroll;
+}
+
+.droids { grid-area: droids;
+        height: 100%;
+        padding: 2px;
+        max-height: 500px;
+        overflow-y: scroll;
+}
+
 
 .current { grid-area: current; }
 
