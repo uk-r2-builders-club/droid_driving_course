@@ -237,7 +237,7 @@ def refresh_members():
            member = json.loads(urllib.request.urlopen(site_base + "/api.php?api=" + api_key + "&request=member&id=" + uid).read().decode('utf-8'))
            member['new'] = 'no'
            database.add_member(member)
-           # urllib.request.urlretrieve(site_base + "/api.php?api=" + api_key + "&request=mug_shot&id=" + uid, "static/members/" + uid + ".jpg")
+           urllib.request.urlretrieve(site_base + "/api.php?api=" + api_key + "&request=mug_shot&id=" + uid, "static/members/" + uid + ".jpg")
         socketio.emit('my_response', {'data': '**ADMIN** Members list refreshed'}, namespace='/comms')
     return "Ok"
 
@@ -252,7 +252,7 @@ def refresh_droids():
            droid = json.loads(urllib.request.urlopen(site_base + "/api.php?api=" + api_key + "&request=droid&id=" + uid).read().decode('utf-8'))
            droid['new'] = 'no'
            database.add_droid(droid)
-           # urllib.request.urlretrieve(site_base + "/api.php?api=" + api_key + "&request=droid_shot&id=" + uid, "static/droids/" + uid + ".jpg")
+           urllib.request.urlretrieve(site_base + "/api.php?api=" + api_key + "&request=droid_shot&id=" + uid, "static/droids/" + uid + ".jpg")
         socketio.emit('my_response', {'data': '**ADMIN** Droids list refreshed'}, namespace='/comms')
     return "Ok"
 
