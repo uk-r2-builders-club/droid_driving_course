@@ -1,5 +1,5 @@
 #include <FastLED.h>
-#define NUM_LEDS 10
+#define NUM_LEDS 14
 
 
 #include <ESP8266WiFi.h>
@@ -10,14 +10,16 @@
 #include "config.h"
 
 CRGBArray<NUM_LEDS> leds;
-#define CELEBRATION 10
-#define FLASHINTERVAL 500
+#define CELEBRATION_LENGTH 10000
+#define DEFAULT_DELAY 50
 
 
 unsigned int localPort = 8888;
 char packetBuffer[64]; //buffer to hold incoming packet,
 char  ReplyBuffer[] = "acknowledged\r\n";       // a string to send back
 int celebration = 0;
+unsigned long celebration_start = 0;
+int celebration_delay = DEFAULT_DELAY;
 
 WiFiUDP Udp;
 ESP8266WiFiMulti WiFiMulti;
@@ -28,6 +30,10 @@ void setup() {
   WiFiMulti.addAP(ssid, pass);
   
   FastLED.addLeds<NEOPIXEL,2>(leds, NUM_LEDS); 
+  for(int i = 0; i < NUM_LEDS; i++) {   
+      leds.fadeToBlackBy(150);
+      //leds[i] = CHSV(160,255,255);
+  }
 
   int timeout = 0;
   while (WiFiMulti.run() != WL_CONNECTED) {
@@ -79,11 +85,22 @@ void loop(){
     Serial.println(packetBuffer);
     if (strcmp(packetBuffer, "rainbow") == 0) {
          celebration = 1;
-         //resetLights();
+         celebration_start = millis();
     } else if (strcmp(packetBuffer, "reset") == 0) {
-         celebration = 2;
-         //resetLights();
+         celebration = 0;
+         celebration_start = millis();
+    } else if (strcmp(packetBuffer, "fast") == 0) {
+         celebration_delay = 20;
+         celebration_start = millis();
+    } else if (strcmp(packetBuffer, "slow") == 0) {
+         celebration_delay = 150;
+         celebration_start = millis();
     }
+  }
+
+  if (millis() - celebration_start > CELEBRATION_LENGTH) {
+         celebration = 0;
+         celebration_delay = DEFAULT_DELAY;
   }
 
   switch (celebration) {
@@ -91,14 +108,16 @@ void loop(){
       for(int i = 0; i < NUM_LEDS; i++) {   
         leds.fadeToBlackBy(150);
         leds[i] = CHSV(160,255,255);
-        FastLED.delay(100);
+        FastLED.delay(celebration_delay);
       }
       break;
     case 1:
       for(int i = 0; i < NUM_LEDS; i++) {   
+        //int colour;
+        //colour = i*(255/i+1);
         leds.fadeToBlackBy(150);
-        leds[i] = CHSV(0,255,255);
-        FastLED.delay(100);
+        leds[i] = CHSV(i*25,255,255);
+        FastLED.delay(celebration_delay);
       }
       break;
   }
