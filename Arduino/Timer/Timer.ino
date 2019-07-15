@@ -209,7 +209,7 @@ void loop() {
     }
   }
 
-  if (buttons[1].fell() ) {
+  if (buttons[1].fell() && course_state == 0) {
     pressed = "START";
     course_time = 0;
     start_time = millis();

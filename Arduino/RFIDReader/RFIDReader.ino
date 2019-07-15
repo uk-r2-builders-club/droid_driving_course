@@ -139,6 +139,7 @@ void setup(void) {
   Serial.print("Connecting to ");
   Serial.println(ssid);
   //wiFi.mode(WIFI_STA);
+  wifi.hostname("rfidreader");
   wifi.addAP(ssid, pass);
   while (wifi.run() != WL_CONNECTED) {
     delay(500);
