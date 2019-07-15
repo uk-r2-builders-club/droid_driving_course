@@ -284,6 +284,29 @@ def upload_runs():
                 database.delete_run(result['id'])
     return "Ok"
 
+@app.route('/admin/connected', methods=['GET'])
+def list_connected():
+    lease_file = open('/var/lib/misc/dnsmasq.leases', 'r')
+    space = ' '
+    message = '<!DOCTYPE html><html><body><h1>DHCP Leases</h1>\n<pre><code>' + \
+                  'Expiry' + space * 4 + \
+                  'MAC Address' + space * 8 + \
+                  'IP Address' + space * 7 + \
+                  'Hostname\n'
+    for line in lease_file.readlines():
+        columns = line.split()
+        columns[0] = time.strftime('%H:%M:%S',
+                                       time.localtime(int(columns[0])))
+        lease = ''
+        # discard last column
+        for i in range(len(columns) - 1):
+            lease += columns[i] + space * 2
+            if i == 2:
+                lease += space * (15 - len(columns[2]))
+        message += '\n' + lease
+    lease_file.close()
+    message += '</code></pre></body></html>'
+    return message
 
 @app.route('/rfid/<tag>', methods=['GET'])
 def read_rfid(tag):
