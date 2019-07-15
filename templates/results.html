@@ -32,12 +32,13 @@
                                                 tbody += "<tr>";
                                                 tbody += "<td>" + json[i].member + "</td>";
                                                 tbody += "<td>" + json[i].droid + "</td>";
-                                                tbody += "<td>" + new Date(json[i].first_half * 1000).toISOString().substr(11, 8) + "</td>";
-                                                tbody += "<td>" + new Date(json[i].second_half * 1000).toISOString().substr(11, 8) + "</td>";
-                                                tbody += "<td>" + new Date(json[i].clock_time * 1000).toISOString().substr(11, 8) + "</td>";
+                                                tbody += "<td>" + new Date(json[i].first_half).toISOString().substr(14, 8) + "</td>";
+                                                tbody += "<td>" + new Date(json[i].second_half).toISOString().substr(14, 8) + "</td>";
+                                                tbody += "<td>" + new Date(json[i].clock_time).toISOString().substr(14, 8) + "</td>";
                                                 tbody += "<td>" + json[i].num_penalties + "</td>";
-                                                tbody += "<td>" + new Date(json[i].final_time * 1000).toISOString().substr(11, 8) + "</td>";
+                                                tbody += "<td>" + new Date(json[i].final_time).toISOString().substr(14, 8) + "</td>";
                                                 tbody += "</tr>";
+
                                         }
                                         $('#results_body').empty().append(tbody);
                                 });

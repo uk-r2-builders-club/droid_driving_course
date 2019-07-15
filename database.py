@@ -143,7 +143,7 @@ def run(current, cmd, member_id, droid_id, milliseconds):
             if __debug__:
                 print("Penalty found on gate: %s | Penalty added: %s | Total Penalty time: %s" % (penalty[0], row[0], penalty_time))
         # Add penalties to clock_time and update database
-        final_time = clock_time + penalty_time
+        final_time = clock_time + (penalty_time * 1000)
         c.execute("UPDATE runs SET second_half_time = " + str(second_half) +
                 ", clock_time = " + str(clock_time) + ", final_time = " + str(final_time) + " WHERE id = " + str(current) + ";")
 
