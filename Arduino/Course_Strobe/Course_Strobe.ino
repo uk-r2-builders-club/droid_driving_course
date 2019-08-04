@@ -76,7 +76,12 @@ void setup() {
 }
 
 void loop(){ 
-  
+
+  if (millis() - celebration_start > CELEBRATION_LENGTH) {
+         celebration = 0;
+         celebration_delay = DEFAULT_DELAY;
+  }
+    
   int packetSize = Udp.parsePacket();
   if (packetSize) {
     // read the packet into packetBufffer
@@ -96,11 +101,6 @@ void loop(){
          celebration_delay = 150;
          celebration_start = millis();
     }
-  }
-
-  if (millis() - celebration_start > CELEBRATION_LENGTH) {
-         celebration = 0;
-         celebration_delay = DEFAULT_DELAY;
   }
 
   switch (celebration) {
