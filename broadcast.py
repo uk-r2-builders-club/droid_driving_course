@@ -10,7 +10,15 @@ class BroadCaster(object):
         self.UDP_IP = '192.168.43.255'
         self.UDP_PORT = 8888
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        self.sock.bind(('192.168.43.1',0))
+        bound = None
+        while bound is None:
+            try:
+                self.sock.bind(('192.168.43.1',0))
+                bound = True
+            except:
+                print("Fail")
+                pass
+            time.sleep(5)
         self.sock.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
         self.sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
 

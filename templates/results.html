@@ -53,9 +53,9 @@
                         document.body.style.backgroundColor = "black";
                         switch(msg.data) {
                             case "toprun":
-                                for(var i=20; i--;){
-                                    setTimeout('createFirework(30,200,8,null,null,null,null,null,Math.random()>0.5,true)',(i+1)*(1+parseInt(Math.random()*750)));
-                                }
+                                // for(var i=20; i--;){
+                                //    setTimeout('createFirework(30,200,8,null,null,null,null,null,Math.random()>0.5,true)',(i+1)*(1+parseInt(Math.random()*750)));
+                                // }
                                 var gif_num = Math.floor(Math.random() * 3) + 1;
                                 $('.messageContainer').html('<div class=specialText>TOP RUN<p><img src=/static/images/toprun/' + gif_num + '.gif></div>');
                                 break;

@@ -1,6 +1,7 @@
 [Unit]
 Description=R2Course
-After=network.target
+After=network.service
+Wants=network-online.target
 
 [Service]
 User=pi

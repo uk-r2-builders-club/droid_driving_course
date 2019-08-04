@@ -107,6 +107,7 @@ def display(cmd):
 def droid_register(did):
     global current_droid, current_run, current_state
     if request.method == 'GET':
+        broadcast.broadcast_message(b'reset')
         data = json.dumps(database.get_droid(did))
         current_droid = json.loads(data, object_hook=lambda d: namedtuple('Droid', d.keys())(*d.values()))
         print(current_droid)
@@ -124,6 +125,7 @@ def droid_register(did):
 def member_register(did):
     global current_member, current_run, current_state
     if request.method == 'GET':
+        broadcast.broadcast_message(b'reset')
         data = json.dumps(database.get_member(did))
         current_member = json.loads(data, object_hook=lambda d: namedtuple('Driver', d.keys())(*d.values()))
         print(current_member)
