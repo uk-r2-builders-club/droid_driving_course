@@ -20,7 +20,7 @@
 
 		// Reload the results table
 		function reload_results() {
-			$.getJSON("/display/results",
+			$.getJSON("/display/today",
                                 function (json) {
                                         var tbody;
                                         var rows = 40;
@@ -84,7 +84,7 @@
 	<div class="leaderboard-container">
 		<div class="logo"><img src="/static/r2_builders_logo.jpeg" height=225></div>
 		<div class="results">
-			<h2>Top Drivers</h2>
+			<h2>Today's Top Drivers</h2>
 			<table class="results_table">
 				<thead>
 					<tr><th>Driver</th><th>Droid</th><th>First Half</th><th>Second Half</th><th>Clock Time</th><th>Penalties</th><th>Final Time</th></tr>

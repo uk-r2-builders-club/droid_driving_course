@@ -296,6 +296,31 @@ def list_results():
         results.append(data)
     return json.dumps(results)
 
+def list_today():
+    results = []
+    conn = create_connection(db_location)
+    c = conn.cursor()
+    c.execute("SELECT id, start, droid_uid, member_uid, first_half_time, second_half_time, clock_time, final_time FROM runs WHERE final_time != \"\" AND start > date('now', 'start of day') ORDER BY final_time ASC;")
+    runs = c.fetchall()
+    for run in runs:
+        data = {}
+        if __debug__:
+            print("Run: %s " % run[0])
+        member = get_member(str(run[3]))
+        droid = get_droid(str(run[2]))
+        data['member'] = member['name']
+        data['droid'] = droid['name']
+        data['start'] = run[1]
+        data['first_half'] = run[4]
+        data['second_half'] = run[5]
+        data['clock_time'] = run[6]
+        data['final_time'] = run[7]
+        data['penalties'], data['num_penalties'] = list_penalties(run[0])
+        if __debug__:
+            print(data)
+        results.append(data)
+    return json.dumps(results)
+
 def list_runs():
     results = []
     conn = create_connection(db_location)

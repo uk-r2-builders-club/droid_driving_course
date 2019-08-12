@@ -124,9 +124,9 @@
 			$.getJSON("/display/results",
                                 function (json) {
                                         var tbody;
-                                        var rows = 10;
+                                        var rows = 15;
                                         tbody = "";
-                                        if (json.length < 10) {
+                                        if (json.length < 15) {
                                                 rows = json.length;
                                         }
                                         for (var i = 0; i < rows; i++) {
@@ -231,7 +231,7 @@
 		<div class="gates-container" id="gates">
 		</div>
 		<div class="results">
-			<h2>Today's Top Drivers</h2>
+			<h2>Top Drivers</h2>
 			<table class="results_table">
 				<thead>
 					<tr><th>Driver</th><th>Droid</th><th>First Half</th><th>Second Half</th><th>Clock Time</th><th>Penalties</th><th>Final Time</th></tr>

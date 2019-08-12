@@ -67,6 +67,10 @@ def scoreboard():
 def results():
     return render_template('results.html', async_mode=socketio.async_mode)
 
+@app.route('/today')
+def today():
+    return render_template('today.html', async_mode=socketio.async_mode)
+
 @app.route('/contenders')
 def contenders():
     return render_template('contenders.html', async_mode=socketio.async_mode)
@@ -78,6 +82,8 @@ def display(cmd):
     if request.method == 'GET':
         if cmd == 'results':
             return database.list_results()
+        if cmd == 'today':
+            return database.list_today()
         if cmd == 'contender':
             contender = {}
             contender['member_uid'] = current_member.member_uid
@@ -141,10 +147,10 @@ def member_register(did):
 
 @app.route('/gate/<gid>/<value>', methods=['GET'])
 def gate_trigger(gid, value):
-    global current_run
+    global current_run, current_state
     if request.method == 'GET':
         if value == 'FAIL':
-            if current_run != 0:
+            if current_run != 0 and current_state != 4:
                database.log_penalty(gid, current_run)
                socketio.emit('my_response', {'data': 'PENALTY!!!'}, namespace='/comms')
                socketio.emit('reload_gates', {'data': 'reload current'}, namespace='/comms')
