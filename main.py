@@ -40,16 +40,10 @@ current_member = Driver(member_uid=0, name="none", email="none")
 current_run = 0
 current_state = 0
 
-def get_member_details(did):
-    """ Pull member details using API """
-
-
 app = Flask(__name__, template_folder='templates')
 app.config['key'] = defaults['key']
 socketio = SocketIO(app)
 broadcast = broadcast.BroadCaster()
-# broadcast.broadcast_message(b'rainbow')
-
 
 @app.route('/')
 def index():
@@ -315,13 +309,6 @@ def list_connected():
     lease_file.close()
     message += '</code></pre></body></html>'
     return message
-
-@app.route('/rfid/<tag>', methods=['GET'])
-def read_rfid(tag):
-    if request.method == 'GET':
-        if __debug__:
-            print("Received RFID tag: %s" % tag)
-    return "Ok"
 
 if __name__ == '__main__':
     database.db_init()

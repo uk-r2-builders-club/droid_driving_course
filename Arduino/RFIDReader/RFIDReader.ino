@@ -25,7 +25,11 @@ products from Adafruit!
 #include <Arduino.h>
 #include <Wire.h>
 #include <SPI.h>
-#include <Adafruit_PN532.h>
+//#include <SoftSPI.h>
+// #include <Adafruit_PN532.h>
+#include <PN532_SPI.h>
+#include <PN532.h>
+#include <NfcAdapter.h>
 #include <WiFi.h>
 #include <WiFiMulti.h>
 #include <HTTPClient.h>
@@ -34,22 +38,14 @@ products from Adafruit!
 
 #include "config.h"
 
-String droid_name;
-String droid_uid;
-String member_name;
-String member_uid;
-
-// If using the breakout with SPI, define the pins for SPI communication.
-#define PN532_SCK  (32)
-#define PN532_MOSI (27)
-#define PN532_SS   (21)
-#define PN532_MISO (26)
-
 #define SPEAKER_PIN 25
 #define TONE_PIN_CHANNEL 0
 
 // Use this line for a breakout with a software SPI connection (recommended):
-Adafruit_PN532 nfc(PN532_SCK, PN532_MISO, PN532_MOSI, PN532_SS);
+//Adafruit_PN532 nfc(PN532_SCK, PN532_MISO, PN532_MOSI, PN532_SS);
+//SoftSPI mySPI(27,26,32);
+PN532_SPI pn532spi(SPI, 21);
+NfcAdapter nfc = NfcAdapter(pn532spi);
 Adafruit_ST7735 tft = Adafruit_ST7735(16, 17, 23, 5, 9);
 WiFiMulti wifi;
 
@@ -139,6 +135,7 @@ void setup(void) {
   Serial.print("Connecting to ");
   Serial.println(ssid);
   //wiFi.mode(WIFI_STA);
+//  wifi.hostname("rfidreader");
   wifi.addAP(ssid, pass);
   while (wifi.run() != WL_CONNECTED) {
     delay(500);
@@ -155,19 +152,7 @@ void setup(void) {
   tft.print("Initialising Reader");
   tft.setCursor(4,36);
   nfc.begin();
-  uint32_t versiondata = nfc.getFirmwareVersion();
-  if (! versiondata) {
-    Serial.print("Didn't find PN53x board");
-    tft.print("FAILED!");
-    while (1); // halt
-  }
-  // Got ok data, print it out!
-  Serial.print("Found chip PN5"); Serial.println((versiondata>>24) & 0xFF, HEX); 
-  Serial.print("Firmware ver. "); Serial.print((versiondata>>16) & 0xFF, DEC); 
-  Serial.print('.'); Serial.println((versiondata>>8) & 0xFF, DEC); 
-  // configure board to read RFID tags
-  nfc.SAMConfig(); 
-  nfc.setPassiveActivationRetries(0x10);
+
   tft.print("Done");
   delay(500);
   Serial.println("Waiting for an ISO14443A Card ...");
@@ -197,93 +182,92 @@ void loop(void) {
   if (millis() > lastRead + 2000 && card_displayed) {
      card_displayed = 0;
      drawScreen();
-  }    
-  // Wait for an ISO14443A type cards (Mifare, etc.).  When one is found
-  // 'uid' will be populated with the UID, and uidLength will indicate
-  // if the uid is 4 bytes (Mifare Classic) or 7 bytes (Mifare Ultralight)
-  success = nfc.readPassiveTargetID(PN532_MIFARE_ISO14443A, uid, &uidLength);
-  
-  if (success && lastRead + 2000 < millis()) {
-    lastRead = millis();
-    // Display some basic information about the card
-    Serial.println("Found an ISO14443A card");
-    Serial.print("  UID Length: ");Serial.print(uidLength, DEC);Serial.println(" bytes");
-    Serial.print("  UID Value: ");
-    nfc.PrintHex(uid, uidLength);
-    
-    if (uidLength == 4)
+  }  
+
+  if (nfc.tagPresent())
+  {
+    NfcTag tag = nfc.read();
+    Serial.println(tag.getTagType());
+    Serial.print("UID: ");Serial.println(tag.getUidString());
+
+    if (tag.hasNdefMessage()) // every tag won't have a message
     {
-      // We probably have a Mifare Classic card ... 
-      Serial.println("Seems to be a Mifare Classic card (4 byte UID)");
-	  
-      // Now we need to try to authenticate it for read/write access
-      // Try with the factory default KeyA: 0xFF 0xFF 0xFF 0xFF 0xFF 0xFF
-      Serial.println("Trying to authenticate block 4 with default KEYA value");
-      uint8_t keya[6] = { 0xD3, 0xF7, 0xD3, 0xF7, 0xD3, 0xF7 };
-	  
-	  // Start with block 4 (the first block of sector 1) since sector 0
-	  // contains the manufacturer data and it's probably better just
-	  // to leave it alone unless you know what you're doing
-      success = nfc.mifareclassic_AuthenticateBlock(uid, uidLength, 4, 0, keya);
-	  
-      if (success)
-      {
-        Serial.println("Sector 1 (Blocks 4..7) has been authenticated");
-        uint8_t data1[16];
-        uint8_t data2[16];
-        uint8_t data3[16];
-        uint8_t data4[16];
-        uint8_t data[64];
+      lastRead=millis();
+      NdefMessage message = tag.getNdefMessage();
+      
+      // R2 Builders tags should have 4 records:
+      //   Text: UK R2 Builders Club
+      //   URL: http://astromech.info
+      //   Text: Details
+      //   URL: Link to PLI info
+      //
+      // If there aren't 4 records, reject with message.
+      
+      if (message.getRecordCount() != 4) {
+        Serial.println("Not enough records");
+        tone(400, 100);
+        tft.fillRect(0,35,200,200,ST7735_BLACK);
+        tft.setCursor(4, 44);
+        tft.print("Invalid Tag");
+        card_displayed = 1;
+      } else {
+        NdefRecord record = message.getRecord(0);
+        Serial.print("  TNF: ");Serial.println(record.getTnf());
+        Serial.print("  Type: ");Serial.println(record.getType()); // will be "" for TNF_EMPTY
+        int payloadLength = record.getPayloadLength();
+        byte payload[payloadLength];
+        record.getPayload(payload);
+        Serial.print("  Payload (HEX): ");
+        PrintHexChar(payload, payloadLength);
+        
 
-        // Try to read the contents of block 4
-        success = nfc.mifareclassic_ReadDataBlock(4, data1);
-		    success = nfc.mifareclassic_ReadDataBlock(5, data2);
-        success = nfc.mifareclassic_ReadDataBlock(6, data3);
-        success = nfc.mifareclassic_ReadDataBlock(7, data4);
+        // Force the data into a String (might work depending on the content)
+        // Real code should use smarter processing
+        String payloadAsString = "";
+        for (int c = 3; c < payloadLength; c++) {
+          payloadAsString += (char)payload[c];
+        }
+        Serial.print("  Payload (as String): ");
+        Serial.println(payloadAsString);
+        if (record.getType() != "T") {// || payloadAsString != "enUK R2 Builders Club" ){
+          Serial.print("First record is not a Text block");
+          tone(400, 100);
+          tft.fillRect(0,35,200,200,ST7735_BLACK);
+          tft.setCursor(4, 44);
+          tft.print("Not a builders card");
+          card_displayed = 1;
+        } else {
+          // Ok, so its got four records, and first one is a text block containing "UK R2 Builders Club"
+          // Lets read in the information in block 3 to register on the course.
+          NdefRecord record = message.getRecord(2);
+          Serial.print("  TNF: ");Serial.println(record.getTnf());
+          Serial.print("  Type: ");Serial.println(record.getType()); // will be "" for TNF_EMPTY
+          int payloadLength = record.getPayloadLength();
+          byte payload[payloadLength];
+          record.getPayload(payload);
+          Serial.print("  Payload (HEX): ");
+          PrintHexChar(payload, payloadLength);
+          // Force the data into a String (might work depending on the content)
+          // Real code should use smarter processing
+          char payloadAsString[payloadLength-3];
+          for (int c = 3; c < payloadLength; c++) {
+            payloadAsString[c-3] = (char)payload[c];
+          }
+          payloadAsString[payloadLength-3] = NULL;
 
-        if (success)
-        {
-          // Data seems to have been read ... spit it out
-          Serial.println("Reading Block 4-7:");
-          nfc.PrintHexChar(data1, 16);
-          nfc.PrintHexChar(data2, 16);
-          nfc.PrintHexChar(data3, 16);
-          nfc.PrintHexChar(data4, 16);
-          Serial.println("");
-          memcpy(data, data1, 16);
-          memcpy(data+16, data2, 16);
-          memcpy(data+32, data3, 16);
-          memcpy(data+48, data4, 16);
-          //nfc.PrintHexChar(data, 64);
+          // payloadAsString now contains:
+          // Droid name
+          // Droid uid
+          // Member name
+          // Member uid
+          Serial.print("Card data: ");
+          Serial.println(payloadAsString);
+          char *droid_name = strtok(payloadAsString, "\n");
+          char *droid_uid = strtok (NULL, "\n");
+          char *member_name = strtok (NULL, "\n");
+          char *member_uid = strtok (NULL, "\n");
 
-          droid_name = "";
-          droid_uid = "";
-          member_name = "";
-          member_uid = "";
-          int i = 11;
-          while(data[i] != 0x0A)
-          {
-            droid_name += (char)data[i];
-            i++;
-          }
-          i++;
-          while(data[i] != 0x0A)
-          {
-            droid_uid += (char)data[i];
-            i++;
-          }
-          i++;
-          while(data[i] != 0x0A)
-          {
-            member_name += (char)data[i];
-            i++;
-          }
-          i++;
-          while(data[i] != 0xFE)
-          {
-            member_uid += (char)data[i];
-            i++;
-          }
+          //sscanf(payloadAsString,"%s\n%s\n%s\n%s", &droid_name, &droid_uid, &member_name, &member_uid);
           Serial.print("Droid Name: ");
           Serial.println(droid_name);
           Serial.print("Droid UID: ");
@@ -345,25 +329,9 @@ void loop(void) {
           tone(1000, 100);
           card_displayed = 1;
         }
-        else
-        {
-          Serial.println("Ooops ... unable to read the requested block.  Try another key?");
-          tone(600, 100);
-          tft.fillRect(0,35,200,200,ST7735_BLACK);
-          tft.setCursor(4, 44);
-          tft.print("Failed to read tag");
-          card_displayed = 1;
-        }
       }
-      else
-      {
-        Serial.println("Ooops ... authentication failed: Try another key?");
-        tone(400, 100);
-        tft.fillRect(0,35,200,200,ST7735_BLACK);
-        tft.setCursor(4, 44);
-        tft.print("Invalid Tag");
-        card_displayed = 1;
-      }
-    }   
+    }
   }
+  delay(2000);
+  
 }
