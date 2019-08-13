@@ -48,6 +48,11 @@ sql_create_penalties_table = """ CREATE TABLE IF NOT EXISTS penalties (
                                         gate_id integer NOT NULL
                                     ); """
 
+sql_create_course_table = """ CREATE TABLE IF NOT EXISTS course (
+                                        config_name text PRIMARY KEY,
+                                        config_value text NULL 
+                                    ); """
+
 
 def db_init():
     conn = create_connection(db_location)
@@ -56,10 +61,20 @@ def db_init():
         execute_sql(conn, sql_create_members_table)
         execute_sql(conn, sql_create_runs_table)
         execute_sql(conn, sql_create_penalties_table)
-        load_gates("course/standard.csv")
+        execute_sql(conn, sql_create_course_table)
+        if get_config('course_type') is None:
+            # Best load initial config values:
+            if __debug__:
+                print("Loading initial config values to course table")
+            with open ('course/config.csv', 'rt') as fin:
+                dr = csv.DictReader(fin)
+                to_db = [(i['config_name'], i['config_value']) for i in dr]
+            c = conn.cursor()
+            c.executemany("INSERT INTO course (config_name, config_value) VALUES (?, ?);", to_db)
+            conn.commit()
+        load_gates("course/" + get_config('course_type') + "/sensors.csv")
     else:
         print("Error!")
-    
 
 def create_connection(db_file):
     """ create a database connection to a SQLite database """
@@ -69,6 +84,16 @@ def create_connection(db_file):
     except Error as e:
         print(e)
     return None
+
+def get_config(setting):
+    conn = create_connection(db_location)
+    c = conn.cursor()
+    c.execute("SELECT config_value FROM course WHERE config_name = \"" + str(setting) + "\";")
+    row = c.fetchone()
+    if row is None:
+        return None
+    else:
+        return row[0] 
 
 def load_gates(gates_csv):
     """ Load gate config """

@@ -1,0 +1,5 @@
+config_name,config_value
+course_type,default
+mot_api_key,changeme
+mot_site_base,https://mot.astromech.info
+app_key,SECRET

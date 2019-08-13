@@ -16,24 +16,11 @@ from flask_socketio import SocketIO, emit
 import database 
 import broadcast
 
-configfile = str(Path.home()) + "/.r2_builders/course.ini"
-config = configparser.SafeConfigParser({'api_key': 'null',
-					'site_base': 'https://mot.r2djp.co.uk',
-                                        'key': 'SECRET' })
-config.read(configfile)
-
-if not os.path.isfile(configfile):
-    print("Config file does not exist")
-    with open(configfile, 'wt') as configfile:
-        config.write(configfile)
-
-defaults = config.defaults()
-
 Droid = namedtuple('Droid', 'droid_uid, member_uid, name, material, weight, transmitter_type')
 Driver = namedtuple('Driver', 'member_uid, name, email')
 
-api_key = defaults['api_key']
-site_base = defaults['site_base']
+api_key = database.get_config('mot_api_key')
+site_base = database.get_config('mot_site_base')
 
 current_droid = Droid(droid_uid=0, member_uid=0, name="none", material="none", weight="none", transmitter_type="none")
 current_member = Driver(member_uid=0, name="none", email="none")
@@ -41,7 +28,7 @@ current_run = 0
 current_state = 0
 
 app = Flask(__name__, template_folder='templates')
-app.config['key'] = defaults['key']
+app.config['key'] = database.get_config('app_key')
 socketio = SocketIO(app)
 broadcast = broadcast.BroadCaster()
 

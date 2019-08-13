@@ -1,0 +1,10 @@
+id,type,name,penalty
+1,bump,Bump 1,20
+2,bump,Bump 2,20
+3,gate,Gate 1,20
+4,gate,Gate 2,20
+5,gate,Gate 3,20
+6,bump,Bump 3,20
+7,bump,Bump 4,20
+8,shock,Shock 1,10
+9,shock,Shock 2,10
