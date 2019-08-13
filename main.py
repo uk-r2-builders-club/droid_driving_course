@@ -7,7 +7,6 @@ import datetime
 import urllib.request
 import json
 import ast
-import configparser
 from pathlib import Path
 from collections import namedtuple
 from future import standard_library
@@ -15,6 +14,7 @@ from flask import Flask, request, render_template
 from flask_socketio import SocketIO, emit
 import database 
 import broadcast
+import audio
 
 Droid = namedtuple('Droid', 'droid_uid, member_uid, name, material, weight, transmitter_type')
 Driver = namedtuple('Driver', 'member_uid, name, email')
@@ -31,6 +31,8 @@ app = Flask(__name__, template_folder='templates')
 app.config['key'] = database.get_config('app_key')
 socketio = SocketIO(app)
 broadcast = broadcast.BroadCaster()
+
+audio = audio.AudioLibrary("sounds", 1)
 
 @app.route('/')
 def index():
@@ -132,6 +134,7 @@ def gate_trigger(gid, value):
     if request.method == 'GET':
         if value == 'FAIL':
             if current_run != 0 and current_state != 4:
+               audio.TriggerSound("woop_woop")
                database.log_penalty(gid, current_run)
                socketio.emit('my_response', {'data': 'PENALTY!!!'}, namespace='/comms')
                socketio.emit('reload_gates', {'data': 'reload current'}, namespace='/comms')
