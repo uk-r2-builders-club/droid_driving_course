@@ -34,6 +34,10 @@ broadcast = broadcast.BroadCaster()
 
 audio = audio.AudioLibrary("sounds", 1)
 
+def course_types():
+    subdirs = os.listdir("course")
+    return json.dumps(subdirs)
+
 @app.route('/')
 def index():
     """GET to generate a list of endpoints and their docstrings"""
@@ -90,6 +94,8 @@ def display(cmd):
             return database.list_droids()
         if cmd == 'members':
             return database.list_members()
+        if cmd == 'course_types':
+            return course_types()
     return "Ok"
 
 @app.route('/droid/<did>', methods=['GET'])
@@ -154,6 +160,7 @@ def run_cmd(cmd, milliseconds):
             current_run = database.run(0, cmd, current_member.member_uid, current_droid.droid_uid, 0)
             socketio.emit('my_response', {'data': 'Start Run'}, namespace='/comms')
             socketio.emit('reload_current', {'data': 'reload current'}, namespace='/comms')
+            audio.TriggerSound("air_horn")
             current_state = 1
         if cmd == 'MIDDLE_WAIT' and current_state == 1:
             database.run(current_run, cmd, current_member.member_uid, current_droid.droid_uid, milliseconds)
@@ -216,6 +223,18 @@ def clear_db():
         socketio.emit('my_response', {'data': '**ADMIN** Database cleared'}, namespace='/comms')
         socketio.emit('reload_results', {'data': 'reload results'}, namespace='/comms')
     return "Ok"
+
+@app.route('/admin/change_course/<course>', methods=['GET'])
+def change_course(course):
+    if request.method == 'GET':
+        database.set_config("course_type", course)
+        database.load_gates()
+        socketio.emit('my_response', {'data': '**ADMIN** Changing Course Type'}, namespace='/comms')
+        socketio.emit('reload_results', {'data': 'reload results'}, namespace='/comms')
+        socketio.emit('reload_gates', {'data': 'reload current'}, namespace='/comms')
+        socketio.emit('course_change', {'data': 'course change'}, namespace='/comms')
+    return "Ok"
+
 
 @app.route('/admin/refresh/members', methods=['GET'])
 def refresh_members():

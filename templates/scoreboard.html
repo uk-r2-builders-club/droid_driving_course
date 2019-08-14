@@ -12,6 +12,7 @@
         <script type="text/javascript" charset="utf-8">
 	$(document).ready(function() {
 		var num_gates = 0;
+		function display_gates() {
                 $.getJSON("/display/list_gates",
 			function (json) {
                                 var gates = document.getElementById('gates');
@@ -24,9 +25,11 @@
 				}
 				gates.innerHTML = gates_text;
 			});
+		}
 
 
                 namespace = '/comms';
+		display_gates();
 		reload_contender();
 		reload_current();
 		reload_gates();
@@ -170,6 +173,10 @@
 	        socket.on('reload_results', function(msg) {
 			reload_results();
                 });
+
+		socket.on('course_change', function(msg) {
+			display_gates();
+		});
 
                 // Do special display
                 socket.on('special_display', function(msg) {

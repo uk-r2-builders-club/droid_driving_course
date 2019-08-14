@@ -8,9 +8,39 @@
         <script type="text/javascript" src="{{ url_for('static',filename='jquery-1.4.2.min.js') }}"></script>
         <script type="text/javascript" src="{{ url_for('static',filename='socket.io.min.js') }}"></script>
         <script type="text/javascript" charset="utf-8">
+        function register(api) {
+             var xhttp = new XMLHttpRequest();
+             var base_url = window.location.protocol + "//" + window.location.hostname + ":" + window.location.port;
+             var call_url = base_url + api;
+             console.log(call_url);
+
+             xhttp.open("GET", call_url, true);
+             xhttp.send();
+        }
+
 	$(document).ready(function() {
                 namespace = '/comms';
+		reload_course_types();
                 var socket = io.connect(location.protocol + '//' + document.domain + ':' + location.port + namespace);
+
+		function reload_course_types() {
+                        $.getJSON("/display/course_types",
+                                function (json) {
+                                        var tbody;
+					var rows = json.length;
+                                        tbody = "";
+                                        for (var i = 0; i < rows; i++) {
+						var course = json[i];
+                                                tbody += "<tr>";
+                                                tbody += "<td>" + course + "</td>";
+                                                tbody += "<td><input type=button value=Select onclick=\"register('/admin/change_course/" + course + "')\"></td>";
+                                                tbody += "</tr>";
+                                        }
+                                        $('#course_types_body').empty().append(tbody);
+                                });
+
+                }
+
 
 	        // Display log messages at the bottom of the screen
                 socket.on('my_response', function(msg) {
@@ -21,6 +51,8 @@
         </script>
 </head>
 <body>
+	<div class="admin-container">
+	<div class="admin-menu">
 	<h1>Admin options</h1>
 	<ul>
                 <li><a href="/contenders">List (and register) contenders</a></li>
@@ -32,8 +64,19 @@
                 <li><a href="/admin/connected">List connected devices</a></li>
 		<li><a href="/run/RESET">Reset run</a></li>
 	</ul>
-	<div>
-		<div class="logs"></div>
+	</div>
+	<div class="admin-config">
+		<h2>Config Settings</h2>
+                <table class="results_table">
+                      <thead>
+                           <tr><th>Course Type</th><th></th></tr>
+                      </thead>
+                      <tbody id="course_types_body">
+                      </tbody>
+                </table>
+
+	</div>
+	<div class="logs"></div>
 	</div>
 </body>
 </html>

@@ -38,7 +38,8 @@ sql_create_runs_table = """ CREATE TABLE IF NOT EXISTS runs (
                                         first_half_time integer NULL,
                                         second_half_time integer NULL,
                                         clock_time integer NULL,
-                                        final_time integer NULL
+                                        final_time integer NULL,
+                                        type text NULL
                                     ); """
 
 sql_create_penalties_table = """ CREATE TABLE IF NOT EXISTS penalties (
@@ -66,13 +67,13 @@ def db_init():
             # Best load initial config values:
             if __debug__:
                 print("Loading initial config values to course table")
-            with open ('course/config.csv', 'rt') as fin:
+            with open ('db/config.csv', 'rt') as fin:
                 dr = csv.DictReader(fin)
                 to_db = [(i['config_name'], i['config_value']) for i in dr]
             c = conn.cursor()
             c.executemany("INSERT INTO course (config_name, config_value) VALUES (?, ?);", to_db)
             conn.commit()
-        load_gates("course/" + get_config('course_type') + "/sensors.csv")
+        load_gates()
     else:
         print("Error!")
 
@@ -95,8 +96,15 @@ def get_config(setting):
     else:
         return row[0] 
 
-def load_gates(gates_csv):
+def set_config(setting, value):
+    conn = create_connection(db_location)
+    execute_sql(conn, "UPDATE course SET config_value=\"" + value + "\" WHERE config_name=\"" + setting + "\";")
+    return 
+
+
+def load_gates():
     """ Load gate config """
+    gates_csv = "course/" + get_config('course_type') + "/sensors.csv"
     with open (gates_csv, 'rt') as fin:
         dr = csv.DictReader(fin)
         to_db = [(i['id'], i['type'], i['name'], i['penalty']) for i in dr]
