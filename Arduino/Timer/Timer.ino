@@ -194,6 +194,8 @@ void loop() {
       for (int d = 0; d<DIGITS; d++) {
         digitWrite(d, display_time[d] - '0', clock_colour);
       }
+    } else if (strcmp(packetBuffer, "tilt") == 0) {
+      Serial.println("TILT");
     }
   }
   

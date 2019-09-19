@@ -1,0 +1,345 @@
+EESchema Schematic File Version 4
+EELAYER 26 0
+EELAYER END
+$Descr A4 11693 8268
+encoding utf-8
+Sheet 1 1
+Title ""
+Date ""
+Rev ""
+Comp ""
+Comment1 ""
+Comment2 ""
+Comment3 ""
+Comment4 ""
+$EndDescr
+$Comp
+L wemos_mini:WeMos_mini U1
+U 1 1 5D7EEB9E
+P 4650 3750
+F 0 "U1" H 4650 4387 60  0000 C CNN
+F 1 "WeMos_mini" H 4650 4281 60  0000 C CNN
+F 2 "wemos-d1-mini:wemos-d1-mini-with-pin-header-and-connector" H 5200 3050 60  0001 C CNN
+F 3 "http://www.wemos.cc/Products/d1_mini.html" H 4650 4281 60  0001 C CNN
+	1    4650 3750
+	1    0    0    -1  
+$EndComp
+$Comp
+L Switch:SW_DIP_x04 SW2
+U 1 1 5D7EEC5C
+P 6950 3700
+F 0 "SW2" H 6950 4167 50  0000 C CNN
+F 1 "ADDRESS" H 6950 4076 50  0000 C CNN
+F 2 "Buttons_Switches_THT:SW_DIP_x4_W7.62mm_Slide" H 6950 3700 50  0001 C CNN
+F 3 "" H 6950 3700 50  0001 C CNN
+	1    6950 3700
+	1    0    0    -1  
+$EndComp
+$Comp
+L SparkFun-Connectors:CONN_02 J3
+U 1 1 5D7EF1FC
+P 5450 5550
+F 0 "J3" V 5502 5472 45  0000 R CNN
+F 1 "RESET" V 5418 5472 45  0000 R CNN
+F 2 "Connectors2:1X02" H 5450 5800 20  0001 C CNN
+F 3 "" H 5450 5550 50  0001 C CNN
+F 4 "XXX-00000" V 5323 5472 60  0000 R CNN "Field4"
+	1    5450 5550
+	0    -1   -1   0   
+$EndComp
+$Comp
+L SparkFun-Connectors:CONN_03 J1
+U 1 1 5D7EF3CD
+P 2800 3350
+F 0 "J1" H 2756 3860 45  0000 C CNN
+F 1 "LED" H 2756 3776 45  0000 C CNN
+F 2 "Connectors2:1X03" H 2800 3750 20  0001 C CNN
+F 3 "" H 2800 3350 50  0001 C CNN
+F 4 "XXX-00000" H 2756 3681 60  0000 C CNN "Field4"
+	1    2800 3350
+	1    0    0    -1  
+$EndComp
+$Comp
+L SparkFun-Connectors:CONN_08LOCK J2
+U 1 1 5D7EF79D
+P 3850 5550
+F 0 "J2" V 3902 5472 45  0000 R CNN
+F 1 "ACCEL" V 3818 5472 45  0000 R CNN
+F 2 "Connectors2:1X08" H 3850 6450 20  0001 C CNN
+F 3 "" H 3850 5550 50  0001 C CNN
+F 4 "XXX-00000" V 3723 5472 60  0000 R CNN "Field4"
+	1    3850 5550
+	0    -1   -1   0   
+$EndComp
+$Comp
+L power:+3.3V #PWR05
+U 1 1 5D7EFBA0
+P 5750 2600
+F 0 "#PWR05" H 5750 2450 50  0001 C CNN
+F 1 "+3.3V" H 5765 2773 50  0000 C CNN
+F 2 "" H 5750 2600 50  0001 C CNN
+F 3 "" H 5750 2600 50  0001 C CNN
+	1    5750 2600
+	1    0    0    -1  
+$EndComp
+$Comp
+L power:GND #PWR07
+U 1 1 5D7F0264
+P 7550 4350
+F 0 "#PWR07" H 7550 4100 50  0001 C CNN
+F 1 "GND" H 7555 4177 50  0000 C CNN
+F 2 "" H 7550 4350 50  0001 C CNN
+F 3 "" H 7550 4350 50  0001 C CNN
+	1    7550 4350
+	1    0    0    -1  
+$EndComp
+Wire Wire Line
+	7250 3800 7550 3800
+Wire Wire Line
+	7550 3800 7550 4350
+Wire Wire Line
+	7250 3700 7550 3700
+Wire Wire Line
+	7550 3700 7550 3800
+Connection ~ 7550 3800
+Wire Wire Line
+	7250 3600 7550 3600
+Wire Wire Line
+	7550 3600 7550 3700
+Connection ~ 7550 3700
+Wire Wire Line
+	7250 3500 7550 3500
+Wire Wire Line
+	7550 3500 7550 3600
+Connection ~ 7550 3600
+$Comp
+L power:GND #PWR06
+U 1 1 5D7F5289
+P 6650 5400
+F 0 "#PWR06" H 6650 5150 50  0001 C CNN
+F 1 "GND" H 6655 5227 50  0000 C CNN
+F 2 "" H 6650 5400 50  0001 C CNN
+F 3 "" H 6650 5400 50  0001 C CNN
+	1    6650 5400
+	1    0    0    -1  
+$EndComp
+Wire Wire Line
+	6650 5300 6650 5400
+Connection ~ 6650 5300
+Wire Wire Line
+	6050 4450 6050 5100
+Wire Wire Line
+	3750 4450 3750 3700
+Wire Wire Line
+	3750 3700 4150 3700
+$Comp
+L Device:R_Network08 RN1
+U 1 1 5D7F8D7E
+P 6150 3000
+F 0 "RN1" H 6530 3046 50  0000 L CNN
+F 1 "R_Network08" H 6530 2955 50  0000 L CNN
+F 2 "Resistors_THT:R_Array_SIP9" V 6625 3000 50  0001 C CNN
+F 3 "http://www.vishay.com/docs/31509/csc.pdf" H 6150 3000 50  0001 C CNN
+	1    6150 3000
+	1    0    0    -1  
+$EndComp
+Wire Wire Line
+	3750 4450 5950 4450
+Wire Wire Line
+	5150 4000 6050 4000
+Wire Wire Line
+	5150 3800 6150 3800
+Wire Wire Line
+	5150 3600 6350 3600
+Wire Wire Line
+	5150 3500 6450 3500
+Wire Wire Line
+	5750 2800 5750 2600
+Wire Wire Line
+	6450 3200 6450 3500
+Connection ~ 6450 3500
+Wire Wire Line
+	6450 3500 6650 3500
+Wire Wire Line
+	6350 3200 6350 3600
+Connection ~ 6350 3600
+Wire Wire Line
+	6350 3600 6650 3600
+Wire Wire Line
+	6250 3200 6250 3700
+Wire Wire Line
+	5150 3700 6250 3700
+Connection ~ 6250 3700
+Wire Wire Line
+	6250 3700 6650 3700
+Wire Wire Line
+	6150 3200 6150 3800
+Connection ~ 6150 3800
+Wire Wire Line
+	6150 3800 6650 3800
+Wire Wire Line
+	6050 3200 6050 4000
+Connection ~ 6050 4000
+Wire Wire Line
+	5950 3200 5950 4450
+Connection ~ 5950 4450
+Wire Wire Line
+	5950 4450 6050 4450
+Wire Wire Line
+	6200 4550 5850 4550
+Wire Wire Line
+	5500 4550 5500 3900
+Wire Wire Line
+	5500 3900 5150 3900
+Wire Wire Line
+	5850 3200 5850 4550
+Connection ~ 5850 4550
+Wire Wire Line
+	5850 4550 5500 4550
+Wire Wire Line
+	4150 3600 3750 3600
+Wire Wire Line
+	3750 3600 3750 3250
+Wire Wire Line
+	3750 3250 2900 3250
+$Comp
+L power:GND #PWR01
+U 1 1 5D802646
+P 3050 3650
+F 0 "#PWR01" H 3050 3400 50  0001 C CNN
+F 1 "GND" H 3055 3477 50  0000 C CNN
+F 2 "" H 3050 3650 50  0001 C CNN
+F 3 "" H 3050 3650 50  0001 C CNN
+	1    3050 3650
+	1    0    0    -1  
+$EndComp
+$Comp
+L power:+5V #PWR03
+U 1 1 5D8026C2
+P 3950 2750
+F 0 "#PWR03" H 3950 2600 50  0001 C CNN
+F 1 "+5V" H 3965 2923 50  0000 C CNN
+F 2 "" H 3950 2750 50  0001 C CNN
+F 3 "" H 3950 2750 50  0001 C CNN
+F 4 "V" H 3950 2750 50  0001 C CNN "Spice_Primitive"
+F 5 "Y" H 3950 2750 50  0001 C CNN "Spice_Netlist_Enabled"
+	1    3950 2750
+	1    0    0    -1  
+$EndComp
+Wire Wire Line
+	4150 3500 3050 3500
+Wire Wire Line
+	3050 3500 3050 3350
+Wire Wire Line
+	3050 3350 2900 3350
+Wire Wire Line
+	3050 3650 3050 3500
+Connection ~ 3050 3500
+Wire Wire Line
+	2900 3150 3950 3150
+Wire Wire Line
+	4150 3150 4150 3400
+Wire Wire Line
+	3950 2750 3950 3150
+Connection ~ 3950 3150
+Wire Wire Line
+	3950 3150 4150 3150
+Wire Wire Line
+	5150 4100 5350 4100
+Wire Wire Line
+	5350 4100 5350 5450
+Wire Wire Line
+	5450 5300 5450 5450
+$Comp
+L power:+5V #PWR02
+U 1 1 5D808F53
+P 3850 5050
+F 0 "#PWR02" H 3850 4900 50  0001 C CNN
+F 1 "+5V" H 3865 5223 50  0000 C CNN
+F 2 "" H 3850 5050 50  0001 C CNN
+F 3 "" H 3850 5050 50  0001 C CNN
+	1    3850 5050
+	1    0    0    -1  
+$EndComp
+$Comp
+L power:GND #PWR04
+U 1 1 5D808F91
+P 4150 5950
+F 0 "#PWR04" H 4150 5700 50  0001 C CNN
+F 1 "GND" H 4155 5777 50  0000 C CNN
+F 2 "" H 4150 5950 50  0001 C CNN
+F 3 "" H 4150 5950 50  0001 C CNN
+	1    4150 5950
+	1    0    0    -1  
+$EndComp
+Wire Wire Line
+	3850 5050 3850 5450
+Wire Wire Line
+	4150 5950 4150 5300
+Wire Wire Line
+	4150 5300 3750 5300
+Wire Wire Line
+	3750 5300 3750 5450
+Wire Wire Line
+	4150 3900 3650 3900
+Wire Wire Line
+	3650 3900 3650 5450
+Wire Wire Line
+	4150 3800 3550 3800
+Wire Wire Line
+	3550 3800 3550 5450
+$Comp
+L SparkFun-Switches:ENCODER-SWITCH S1
+U 1 1 5D81BB4B
+P 6700 4900
+F 0 "S1" H 6700 4340 45  0000 C CNN
+F 1 "ENCODER-SWITCH" H 6700 4424 45  0000 C CNN
+F 2 "Switches:ROTARY_ENC_PLAIN" H 6700 5300 20  0001 C CNN
+F 3 "" H 6700 4900 50  0001 C CNN
+F 4 "COM-09117" H 6700 4519 60  0000 C CNN "Field4"
+	1    6700 4900
+	-1   0    0    1   
+$EndComp
+Wire Wire Line
+	7200 4000 7200 4700
+Wire Wire Line
+	7200 4700 7100 4700
+Wire Wire Line
+	6050 4000 7200 4000
+Wire Wire Line
+	7200 5300 7200 5100
+Wire Wire Line
+	7200 5100 7100 5100
+Wire Wire Line
+	6650 5300 7200 5300
+Wire Wire Line
+	5450 5300 6200 5300
+Wire Wire Line
+	6300 5100 6050 5100
+Wire Wire Line
+	6300 4700 6200 4700
+Wire Wire Line
+	6200 4700 6200 4550
+Wire Wire Line
+	6300 4900 6200 4900
+Wire Wire Line
+	6200 4900 6200 5300
+Connection ~ 6200 5300
+Wire Wire Line
+	6200 5300 6650 5300
+$Comp
+L power:+3.3V #PWR0101
+U 1 1 5D822ACE
+P 5300 3000
+F 0 "#PWR0101" H 5300 2850 50  0001 C CNN
+F 1 "+3.3V" H 5315 3173 50  0000 C CNN
+F 2 "" H 5300 3000 50  0001 C CNN
+F 3 "" H 5300 3000 50  0001 C CNN
+	1    5300 3000
+	1    0    0    -1  
+$EndComp
+Wire Wire Line
+	5150 3400 5300 3400
+Wire Wire Line
+	5300 3400 5300 3000
+$EndSCHEMATC

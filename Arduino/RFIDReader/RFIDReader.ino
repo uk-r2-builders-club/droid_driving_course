@@ -23,10 +23,7 @@ products from Adafruit!
 */
 /**************************************************************************/
 #include <Arduino.h>
-#include <Wire.h>
 #include <SPI.h>
-//#include <SoftSPI.h>
-// #include <Adafruit_PN532.h>
 #include <PN532_SPI.h>
 #include <PN532.h>
 #include <NfcAdapter.h>
@@ -41,9 +38,6 @@ products from Adafruit!
 #define SPEAKER_PIN 25
 #define TONE_PIN_CHANNEL 0
 
-// Use this line for a breakout with a software SPI connection (recommended):
-//Adafruit_PN532 nfc(PN532_SCK, PN532_MISO, PN532_MOSI, PN532_SS);
-//SoftSPI mySPI(27,26,32);
 PN532_SPI pn532spi(SPI, 21);
 NfcAdapter nfc = NfcAdapter(pn532spi);
 Adafruit_ST7735 tft = Adafruit_ST7735(16, 17, 23, 5, 9);
@@ -89,13 +83,24 @@ static unsigned char r2_logo_bits[] = {
    0xfc, 0x03, 0x00, 0x00, 0x00, 0x1e, 0x00, 0x00, 0x00, 0x80, 0xff, 0x0f,
    0x00, 0x00, 0x00, 0x80, 0xff, 0x03, 0x00, 0x00, 0x00, 0x00, 0x37, 0x00 };
    
-void tone(uint8_t frequency, uint8_t duration) {
+void tone(uint16_t frequency, uint16_t duration) {
+   Serial.print("Playing tone of ");
+   Serial.print(frequency);
+   Serial.print("Hz for ");
+   Serial.print(duration);
+   Serial.println("ms");
    ledcWriteTone(TONE_PIN_CHANNEL, frequency);
    _count = millis() + duration;
    speaker_on = 1;  
+   Serial.print("Current millis() = ");
+   Serial.print(millis());
+   Serial.print(" count = ");
+   Serial.println(_count);
 }
 
 void drawScreen() {
+  Serial.print("Current millis() = ");
+  Serial.println(millis());
   tft.fillScreen(ST7735_BLACK); 
   tft.setCursor(4,0);
   tft.print("R2 Builders");
@@ -107,6 +112,8 @@ void drawScreen() {
   tft.print("Please Swipe");
   tft.setCursor(55,56);
   tft.print("Tag");
+  Serial.print("Current millis() = ");
+  Serial.println(millis());
 }
 
 void setup(void) {  
@@ -152,14 +159,14 @@ void setup(void) {
   tft.print("Initialising Reader");
   tft.setCursor(4,36);
   nfc.begin();
-
+  
   tft.print("Done");
   delay(500);
   Serial.println("Waiting for an ISO14443A Card ...");
   
   // Setup done
   drawScreen();
-  tone(1000,100);
+  tone(350,10);
   
 }
 
@@ -170,6 +177,8 @@ void loop(void) {
 
   // Mute Speaker
   if(speaker_on) {
+    Serial.println("Speaker is on....");
+    Serial.println(millis());
      if(millis() > _count) {
          speaker_on = 0;
          Serial.println("Muting Speaker");
@@ -180,12 +189,14 @@ void loop(void) {
 
   // Clear screen of names
   if (millis() > lastRead + 2000 && card_displayed) {
+     Serial.println("Drawing screen.... ");
      card_displayed = 0;
      drawScreen();
   }  
 
-  if (nfc.tagPresent())
+  if (nfc.tagPresent(100) && millis() > lastRead + 2000)
   {
+    Serial.println("Tag Present");
     NfcTag tag = nfc.read();
     Serial.println(tag.getTagType());
     Serial.print("UID: ");Serial.println(tag.getUidString());
@@ -205,7 +216,7 @@ void loop(void) {
       
       if (message.getRecordCount() != 4) {
         Serial.println("Not enough records");
-        tone(400, 100);
+        tone(155, 500);
         tft.fillRect(0,35,200,200,ST7735_BLACK);
         tft.setCursor(4, 44);
         tft.print("Invalid Tag");
@@ -231,7 +242,7 @@ void loop(void) {
         Serial.println(payloadAsString);
         if (record.getType() != "T") {// || payloadAsString != "enUK R2 Builders Club" ){
           Serial.print("First record is not a Text block");
-          tone(400, 100);
+          tone(155, 500);
           tft.fillRect(0,35,200,200,ST7735_BLACK);
           tft.setCursor(4, 44);
           tft.print("Not a builders card");
@@ -326,12 +337,10 @@ void loop(void) {
 
           // Lets notify that a card was read ok
           // Wait a bit before reading the card again
-          tone(1000, 100);
+          tone(440, 100);
           card_displayed = 1;
         }
       }
     }
   }
-  delay(2000);
-  
 }
