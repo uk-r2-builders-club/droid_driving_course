@@ -1,4 +1,5 @@
 EESchema Schematic File Version 4
+LIBS:Shock Sensor-cache
 EELAYER 26 0
 EELAYER END
 $Descr A4 11693 8268
@@ -33,7 +34,7 @@ F 1 "ADDRESS" H 6950 4076 50  0000 C CNN
 F 2 "Buttons_Switches_THT:SW_DIP_x4_W7.62mm_Slide" H 6950 3700 50  0001 C CNN
 F 3 "" H 6950 3700 50  0001 C CNN
 	1    6950 3700
-	1    0    0    -1  
+	-1   0    0    -1  
 $EndComp
 $Comp
 L SparkFun-Connectors:CONN_02 J3
@@ -74,12 +75,12 @@ $EndComp
 $Comp
 L power:+3.3V #PWR05
 U 1 1 5D7EFBA0
-P 5750 2600
-F 0 "#PWR05" H 5750 2450 50  0001 C CNN
-F 1 "+3.3V" H 5765 2773 50  0000 C CNN
-F 2 "" H 5750 2600 50  0001 C CNN
-F 3 "" H 5750 2600 50  0001 C CNN
-	1    5750 2600
+P 6550 2650
+F 0 "#PWR05" H 6550 2500 50  0001 C CNN
+F 1 "+3.3V" H 6565 2823 50  0000 C CNN
+F 2 "" H 6550 2650 50  0001 C CNN
+F 3 "" H 6550 2650 50  0001 C CNN
+	1    6550 2650
 	1    0    0    -1  
 $EndComp
 $Comp
@@ -126,12 +127,6 @@ $EndComp
 Wire Wire Line
 	6650 5300 6650 5400
 Connection ~ 6650 5300
-Wire Wire Line
-	6050 4450 6050 5100
-Wire Wire Line
-	3750 4450 3750 3700
-Wire Wire Line
-	3750 3700 4150 3700
 $Comp
 L Device:R_Network08 RN1
 U 1 1 5D7F8D7E
@@ -141,67 +136,8 @@ F 1 "R_Network08" H 6530 2955 50  0000 L CNN
 F 2 "Resistors_THT:R_Array_SIP9" V 6625 3000 50  0001 C CNN
 F 3 "http://www.vishay.com/docs/31509/csc.pdf" H 6150 3000 50  0001 C CNN
 	1    6150 3000
-	1    0    0    -1  
+	-1   0    0    -1  
 $EndComp
-Wire Wire Line
-	3750 4450 5950 4450
-Wire Wire Line
-	5150 4000 6050 4000
-Wire Wire Line
-	5150 3800 6150 3800
-Wire Wire Line
-	5150 3600 6350 3600
-Wire Wire Line
-	5150 3500 6450 3500
-Wire Wire Line
-	5750 2800 5750 2600
-Wire Wire Line
-	6450 3200 6450 3500
-Connection ~ 6450 3500
-Wire Wire Line
-	6450 3500 6650 3500
-Wire Wire Line
-	6350 3200 6350 3600
-Connection ~ 6350 3600
-Wire Wire Line
-	6350 3600 6650 3600
-Wire Wire Line
-	6250 3200 6250 3700
-Wire Wire Line
-	5150 3700 6250 3700
-Connection ~ 6250 3700
-Wire Wire Line
-	6250 3700 6650 3700
-Wire Wire Line
-	6150 3200 6150 3800
-Connection ~ 6150 3800
-Wire Wire Line
-	6150 3800 6650 3800
-Wire Wire Line
-	6050 3200 6050 4000
-Connection ~ 6050 4000
-Wire Wire Line
-	5950 3200 5950 4450
-Connection ~ 5950 4450
-Wire Wire Line
-	5950 4450 6050 4450
-Wire Wire Line
-	6200 4550 5850 4550
-Wire Wire Line
-	5500 4550 5500 3900
-Wire Wire Line
-	5500 3900 5150 3900
-Wire Wire Line
-	5850 3200 5850 4550
-Connection ~ 5850 4550
-Wire Wire Line
-	5850 4550 5500 4550
-Wire Wire Line
-	4150 3600 3750 3600
-Wire Wire Line
-	3750 3600 3750 3250
-Wire Wire Line
-	3750 3250 2900 3250
 $Comp
 L power:GND #PWR01
 U 1 1 5D802646
@@ -301,32 +237,13 @@ F 4 "COM-09117" H 6700 4519 60  0000 C CNN "Field4"
 	-1   0    0    1   
 $EndComp
 Wire Wire Line
-	7200 4000 7200 4700
-Wire Wire Line
 	7200 4700 7100 4700
-Wire Wire Line
-	6050 4000 7200 4000
 Wire Wire Line
 	7200 5300 7200 5100
 Wire Wire Line
 	7200 5100 7100 5100
 Wire Wire Line
 	6650 5300 7200 5300
-Wire Wire Line
-	5450 5300 6200 5300
-Wire Wire Line
-	6300 5100 6050 5100
-Wire Wire Line
-	6300 4700 6200 4700
-Wire Wire Line
-	6200 4700 6200 4550
-Wire Wire Line
-	6300 4900 6200 4900
-Wire Wire Line
-	6200 4900 6200 5300
-Connection ~ 6200 5300
-Wire Wire Line
-	6200 5300 6650 5300
 $Comp
 L power:+3.3V #PWR0101
 U 1 1 5D822ACE
@@ -342,4 +259,82 @@ Wire Wire Line
 	5150 3400 5300 3400
 Wire Wire Line
 	5300 3400 5300 3000
+Wire Wire Line
+	3950 3250 3950 4000
+Wire Wire Line
+	3950 4000 4150 4000
+Wire Wire Line
+	2900 3250 3950 3250
+Wire Wire Line
+	6550 2650 6550 2800
+Wire Wire Line
+	5450 5300 6150 5300
+Wire Wire Line
+	6350 3900 6350 4200
+Wire Wire Line
+	6350 4200 7200 4200
+Wire Wire Line
+	7200 4200 7200 4700
+Wire Wire Line
+	6300 4900 6150 4900
+Wire Wire Line
+	6150 4900 6150 5300
+Connection ~ 6150 5300
+Wire Wire Line
+	6150 5300 6650 5300
+Wire Wire Line
+	4150 3600 3750 3600
+Wire Wire Line
+	4150 3700 3850 3700
+Wire Wire Line
+	3850 3700 3850 4400
+Wire Wire Line
+	3850 4400 5900 4400
+Wire Wire Line
+	5900 4400 5900 4700
+Wire Wire Line
+	5900 4700 6300 4700
+Wire Wire Line
+	3750 4500 5800 4500
+Wire Wire Line
+	5800 4500 5800 5100
+Wire Wire Line
+	5800 5100 6300 5100
+Wire Wire Line
+	3750 3600 3750 4500
+Wire Wire Line
+	5150 3500 6550 3500
+Wire Wire Line
+	5150 3600 6450 3600
+Wire Wire Line
+	5150 3700 6350 3700
+Wire Wire Line
+	5150 3800 6250 3800
+Wire Wire Line
+	5150 3900 6150 3900
+Wire Wire Line
+	6550 3200 6550 3500
+Connection ~ 6550 3500
+Wire Wire Line
+	6550 3500 6650 3500
+Wire Wire Line
+	6450 3200 6450 3600
+Connection ~ 6450 3600
+Wire Wire Line
+	6450 3600 6650 3600
+Wire Wire Line
+	6350 3200 6350 3700
+Connection ~ 6350 3700
+Wire Wire Line
+	6350 3700 6650 3700
+Wire Wire Line
+	6250 3200 6250 3800
+Connection ~ 6250 3800
+Wire Wire Line
+	6250 3800 6650 3800
+Wire Wire Line
+	6150 3200 6150 3900
+Connection ~ 6150 3900
+Wire Wire Line
+	6150 3900 6350 3900
 $EndSCHEMATC
