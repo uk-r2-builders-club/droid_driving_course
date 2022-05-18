@@ -5,7 +5,7 @@
         <link rel="stylesheet" type="text/css" href="{{ url_for('static',filename='main.css') }}">
         <link rel="stylesheet" href="{{ url_for('static',filename='w3.css') }}">
         <link rel="shortcut icon" href="{{ url_for('static', filename='favicon.ico') }}">
-        <script type="text/javascript" src="{{ url_for('static',filename='jquery-1.4.2.min.js') }}"></script>
+        <script type="text/javascript" src="{{ url_for('static',filename='jquery-3.6.0.min.js') }}"></script>
         <script type="text/javascript" src="{{ url_for('static',filename='socket.io.min.js') }}"></script>
         <script type="text/javascript" charset="utf-8">
         function register(api) {
@@ -57,8 +57,7 @@
 	<ul>
                 <li><a href="/contenders">List (and register) contenders</a></li>
 		<li><a href="/admin/clear_db">Clear Runs DB</a></li>
-		<li><a href="/admin/refresh/members">Refresh Members List</a> (Must have internet connection)</li>
-		<li><a href="/admin/refresh/droids">Refresh Droids List</a> (Must have internet connection)</li>
+		<li><a href="/admin/refresh/all">Refresh Data</a> (Must have internet connection)</li>
 		<li><a href="/admin/refresh/scoreboard">Force refresh of scoreboard</a></li>
 		<li><a href="/admin/upload/runs">Push scores up to MOT site</a></li>
                 <li><a href="/admin/connected">List connected devices</a></li>

@@ -8,7 +8,7 @@ db_location = "db/r2_course.db"
 sql_create_droids_table = """ CREATE TABLE IF NOT EXISTS droids (
                                         droid_uid integer PRIMARY KEY,
                                         name text NOT NULL,
-                                        member text NOT NULL,
+                                        member_uid integer NOT NULL,
                                         material text NULL,
                                         weight text NULL,
                                         transmitter_type text NULL,
@@ -58,6 +58,8 @@ sql_create_course_table = """ CREATE TABLE IF NOT EXISTS course (
 def db_init():
     conn = create_connection(db_location)
     if conn is not None:
+        if __debug__:
+            print("Connected to database")
         execute_sql(conn, sql_create_droids_table)
         execute_sql(conn, sql_create_members_table)
         execute_sql(conn, sql_create_runs_table)
@@ -243,7 +245,7 @@ def add_member(data):
     print("Adding: %s " % data)
     conn = create_connection(db_location)
     sql = "INSERT INTO members(member_uid, name, email, new) VALUES({}, \"{}\", \"{}\", \"{}\");".format(
-            data['member_uid'], data['forename'] + " " + data['surname'], data['email'], data['new'])
+            data['id'], data['forename'] + " " + data['surname'], data['email'], data['new'])
     execute_sql(conn, sql)
     return
 
@@ -263,8 +265,8 @@ def add_droid(data):
     """ Add a droid to the database """
     print("Adding: %s " % data)  
     conn = create_connection(db_location)
-    sql = "INSERT INTO droids(droid_uid, name, member, material, weight, transmitter_type, new) VALUES({}, \"{}\", \"{}\", \"{}\", \"{}\", \"{}\", \"{}\");".format(
-            data['droid_uid'], data['name'], data['member_uid'], data['material'], data['weight'], data['transmitter_type'], data['new'])
+    sql = "INSERT INTO droids(droid_uid, name, member_uid, material, weight, transmitter_type, new) VALUES({}, \"{}\", \"{}\", \"{}\", \"{}\", \"{}\", \"{}\");".format(
+            data['id'], data['name'], data['member_uid'], data['material'], data['weight'], data['transmitter_type'], data['new'])
     execute_sql(conn, sql)
     return
 
@@ -399,7 +401,7 @@ def list_droids():
     results = []
     conn = create_connection(db_location)
     c = conn.cursor()
-    c.execute("SELECT * FROM droids, members WHERE droids.member = members.member_uid")
+    c.execute("SELECT * FROM droids, members WHERE droids.member_uid = members.member_uid")
     droids = c.fetchall()
     for droid in droids:
         data = {}

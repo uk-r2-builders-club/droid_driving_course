@@ -2,13 +2,17 @@
 <html>
 <head>
 	<title>R2 Builders Driving Course</title>
+        <link rel="stylesheet" href="{{ url_for('static',filename='css/bootstrap.min.css') }}" integrity="sha384-MCw98/SFnGE8fJT3GXwEOngsV7Zt27NXFoaoApmYm81iuXoPkFOJwJ8ERdknLPMO" crossorigin="anonymous">
         <link rel="stylesheet" type="text/css" href="{{ url_for('static',filename='main.css') }}">
         <link rel="stylesheet" type="text/css" href="{{ url_for('static',filename='fireworks.css') }}">
         <link rel="stylesheet" href="{{ url_for('static',filename='w3.css') }}">
 	<link rel="shortcut icon" href="{{ url_for('static', filename='favicon.ico') }}">
-	<script type="text/javascript" src="{{ url_for('static',filename='jquery-1.4.2.min.js') }}"></script>
+        
+	<script type="text/javascript" src="{{ url_for('static',filename='jquery-3.6.0.min.js') }}"></script>
         <script type="text/javascript" src="{{ url_for('static',filename='socket.io.min.js') }}"></script>
         <script type="text/javascript" src="{{ url_for('static',filename='fireworks.js') }}"></script>
+        <script src="{{ url_for('static',filename='js/bootstrap.min.js') }}" integrity="sha384-ChfqqxuZUCnJSK3+MXmPNIyE6ZbWh2IMqE241rYiqJxyMiZ6OW/JmZQ5stwEULTy" crossorigin="anonymous"></script>
+
         <script type="text/javascript" charset="utf-8">
 	$(document).ready(function() {
 		var num_gates = 0;
@@ -207,12 +211,13 @@
  <div id="fw" class="firework"></div>
  <div id="fp" class="fireworkParticle"><img src="{{ url_for('static',filename='particles.gif') }}" alt="" /></div>
 </div>
-        <div id="fireContainer">
+<div id="fireContainer">
         <div class="messageContainer">
-	<div class="grid-container">
-		<div class="logo"><img src="/static/r2_builders_logo.jpeg" height=225></div>
-		<div class="contender">
-                        <table class=contender_table>
+
+	        <div class="grid-container">
+		        <div class="logo"><img src="/static/cropped-BDround512.jpg" height=225></div>
+		        <div class="contender">
+                                <table class=contender_table>
                                 <tr>
                                         <td id=driver_image>Driver Image</td>
                                         <td id=droid_image>Droid Image</td>
@@ -223,21 +228,21 @@
 					<td id=droid_name>Droid Name</td>
 				</tr>
                         </table>
-                </div>
-		<div class="current">
-			<h2>Current Run</h2>
-			<table class="current_run">
-				<tr><td>Status</td><td><status></status></td></tr>
-				<tr><td>First Half</td><td><first_half></first_half></td></tr>
-				<tr><td>Second Half</td><td><second_half></second_half></td></tr>
-				<tr><td>Clock Time</td><td><clock_time></clock_time></td></tr>
-				<tr><td>Penalties</td><td><penalties></penalties></td></tr>
-				<tr><td>Final Time</td><td><final_time></final_time></td></tr>
-			</table>
-		</div>
-		<div class="gates-container" id="gates">
-		</div>
-		<div class="results">
+                        </div>
+		        <div class="current">
+                                <h2>Current Run</h2>
+                                <table class="current_run">
+                                        <tr><td>Status</td><td><status></status></td></tr>
+                                        <tr><td>First Half</td><td><first_half></first_half></td></tr>
+                                        <tr><td>Second Half</td><td><second_half></second_half></td></tr>
+                                        <tr><td>Clock Time</td><td><clock_time></clock_time></td></tr>
+                                        <tr><td>Penalties</td><td><penalties></penalties></td></tr>
+                                        <tr><td>Final Time</td><td><final_time></final_time></td></tr>
+                                </table>
+		        </div>
+		        <div class="gates-container" id="gates">
+		        </div>
+		        <div class="results">
 			<h2>Top Drivers</h2>
 			<table class="results_table">
 				<thead>
@@ -246,12 +251,12 @@
 				<tbody id="results_body">
 				</tbody>
 			</table>
-		</div>
-		<div class="logs">
+		        </div>
+		        <div class="logs">
+                        </div>
+	        </div>
+        </div>
 </div>
-	</div>
-        </div>
-        </div>
 </body>
 </html>
 

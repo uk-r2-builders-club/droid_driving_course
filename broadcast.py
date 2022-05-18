@@ -1,4 +1,5 @@
 import socket
+import ipaddress
 import time
 import json
 import threading
@@ -7,13 +8,14 @@ class BroadCaster(object):
 
     def __init__(self):
         super(BroadCaster, self).__init__()
-        self.UDP_IP = '192.168.43.255'
+        self.IPADDRESS = socket.gethostbyname(socket.gethostname() + ".local")
+        self.UDP_IP = socket.inet_ntoa(socket.inet_aton(self.IPADDRESS)[:3] + b'\xff' )
         self.UDP_PORT = 8888
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         bound = None
         while bound is None:
             try:
-                self.sock.bind(('192.168.43.1',0))
+                self.sock.bind((self.IPADDRESS,0))
                 bound = True
             except:
                 print("Fail")

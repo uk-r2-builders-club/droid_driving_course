@@ -16,6 +16,9 @@ import database
 import broadcast
 import audio
 
+
+database.db_init()
+
 Droid = namedtuple('Droid', 'droid_uid, member_uid, name, material, weight, transmitter_type')
 Driver = namedtuple('Driver', 'member_uid, name, email')
 
@@ -235,36 +238,21 @@ def change_course(course):
         socketio.emit('course_change', {'data': 'course change'}, namespace='/comms')
     return "Ok"
 
-
-@app.route('/admin/refresh/members', methods=['GET'])
-def refresh_members():
+@app.route('/admin/refresh/all', methods=['GET'])
+def refresh_all():
     if request.method == 'GET':
         database.clear_db("members")
-        uids = ast.literal_eval(urllib.request.urlopen(site_base + "/api.php?api=" + api_key + "&request=list_member_uid").read().decode('utf-8').rstrip('\n'))
-        if __debug__:
-            print("UIDs: %s" % uids)
-        for uid in uids:
-           print("URL: %s" % site_base + "/api.php?api=" + api_key + "&request=member&id=" + uid)
-           member = json.loads(urllib.request.urlopen(site_base + "/api.php?api=" + api_key + "&request=member&id=" + uid).read().decode('utf-8'))
-           member['new'] = 'no'
-           database.add_member(member)
-           urllib.request.urlretrieve(site_base + "/api.php?api=" + api_key + "&request=mug_shot&id=" + uid, "static/members/" + uid + ".jpg")
-        socketio.emit('my_response', {'data': '**ADMIN** Members list refreshed'}, namespace='/comms')
-    return "Ok"
-
-@app.route('/admin/refresh/droids', methods=['GET'])
-def refresh_droids():
-    if request.method == 'GET':
         database.clear_db("droids")
-        uids = ast.literal_eval(urllib.request.urlopen(site_base + "/api.php?api=" + api_key + "&request=list_droid_uid").read().decode('utf-8').rstrip('\n'))
-        if __debug__:
-            print("UIDs: %s" % uids)
-        for uid in uids:
-           droid = json.loads(urllib.request.urlopen(site_base + "/api.php?api=" + api_key + "&request=droid&id=" + uid).read().decode('utf-8'))
-           droid['new'] = 'no'
-           database.add_droid(droid)
-           urllib.request.urlretrieve(site_base + "/api.php?api=" + api_key + "&request=droid_shot&id=" + uid, "static/droids/" + uid + ".jpg")
-        socketio.emit('my_response', {'data': '**ADMIN** Droids list refreshed'}, namespace='/comms')
+        url = site_base + "/api/getmembers" + "?api_token=" + api_key
+        print(url)
+        data = json.loads(ast.literal_eval(urllib.request.urlopen(url).read().decode('utf-8').rstrip('\n')))
+        for member in data:
+            member['new'] = 'no'
+            database.add_member(member)
+            for droid in member['droids']:
+                droid['new'] = 'no'
+                droid['member_uid'] = member['id']
+                database.add_droid(droid)
     return "Ok"
 
 @app.route('/admin/refresh/scoreboard', methods=['GET'])
@@ -320,6 +308,8 @@ def list_connected():
     return message
 
 if __name__ == '__main__':
+    if __debug__:
+        print("Starting R2 course")
     database.db_init()
     # app.run(host='0.0.0.0', debug=__debug__, use_reloader=False, threaded=True)
     socketio.run(app, host='0.0.0.0', debug=__debug__, use_reloader=False)
