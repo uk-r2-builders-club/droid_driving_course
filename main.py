@@ -249,10 +249,16 @@ def refresh_all():
         for member in data:
             member['new'] = 'no'
             database.add_member(member)
+            image_url = site_base + "/api/getmemberimage/" + str(member['id']) + "?api_token=" + api_key
+            print(image_url)
+            urllib.request.urlretrieve(image_url, "static/members/" + str(member['id']) + ".jpg")
             for droid in member['droids']:
                 droid['new'] = 'no'
                 droid['member_uid'] = member['id']
                 database.add_droid(droid)
+                image_url = site_base + "/api/getdroidimage/" + str(droid['id']) + "?api_token=" + api_key
+                print(image_url)
+                urllib.request.urlretrieve(image_url, "static/droids/" + str(droid['id']) + ".jpg")
     return "Ok"
 
 @app.route('/admin/refresh/scoreboard', methods=['GET'])
