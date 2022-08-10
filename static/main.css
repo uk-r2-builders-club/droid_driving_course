@@ -23,6 +23,29 @@
   font-size: 10vw;
 }
 
+label {
+        color: white;
+        font-size: 1.2rem;
+}
+
+.dataTables_wrapper {
+        color: white !important;
+}
+.paginate_button_current {
+        color: white !important;
+}
+
+.dataTables_wrapper .dataTables_paginate .paginate_button {
+        color: white !important; 
+}
+
+.dataTables_wrapper .dataTables_paginate .paginate_button {
+        color: white !important; 
+}
+
+.dataTables_wrapper .dataTables_info {
+        color: white;
+}
 
 canvas {
     z-index: 100;
@@ -65,7 +88,7 @@ table.contender_table th {
 .members-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  grid-template-rows: 230px auto 75px;
+  grid-template-rows: 230px auto 25px;
   grid-template-areas: "logo contender" "members droids" "logs logs";
 }
 
@@ -123,7 +146,6 @@ table.droids tr,td,th {
 
 .members { grid-area: members;
         height: 100%;
-        max-height: 500px;
         padding: 2px;
         overflow-y: scroll;
 }
@@ -131,7 +153,6 @@ table.droids tr,td,th {
 .droids { grid-area: droids;
         height: 100%;
         padding: 2px;
-        max-height: 500px;
         overflow-y: scroll;
 }
 

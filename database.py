@@ -19,6 +19,7 @@ sql_create_members_table = """ CREATE TABLE IF NOT EXISTS members (
                                         member_uid integer PRIMARY KEY,
                                         name text NOT NULL,
                                         email text NULL,
+                                        badge_id text NOT NULL,
                                         new boolean NO
                                     ); """
 
@@ -244,8 +245,8 @@ def add_member(data):
     """ Add a member to the database """
     print("Adding: %s " % data)
     conn = create_connection(db_location)
-    sql = "INSERT INTO members(member_uid, name, email, new) VALUES({}, \"{}\", \"{}\", \"{}\");".format(
-            data['id'], data['forename'] + " " + data['surname'], data['email'], data['new'])
+    sql = "INSERT INTO members(member_uid, name, email, badge_id, new) VALUES({}, \"{}\", \"{}\", \"{}\", \"{}\");".format(
+            data['id'], data['forename'] + " " + data['surname'], data['email'], data['badge_id'], data['new'])
     execute_sql(conn, sql)
     return
 

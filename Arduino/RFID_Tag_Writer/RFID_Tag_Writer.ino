@@ -16,14 +16,8 @@
 #include <PN532_SPI.h>
 #include <PN532.h>
 #include <NfcAdapter.h>
-#include <WiFi.h>
-#include <HTTPClient.h>
-#include <DNSServer.h>
-#include <WebServer.h>
-#include <WiFiManager.h>
 #include <Adafruit_GFX.h>                                  // Core graphics library
 #include <Adafruit_ST7735.h>                               // Hardware-specific library
-#include <ArduinoJson.h>
 
 #include "config.h"
 
@@ -48,21 +42,12 @@ char main_info[56] = "";
 char line[128] = "";
 int l=0;
 
-int num_members = 0;
-int httpCode;
-String payload;
-JsonArray uids;
-HTTPClient http;
-
 void setup() {
       Serial.begin(115200);
-      WiFiManager wifiManager;
-      //wifiManager.resetSettings();
-      wifiManager.autoConnect("UKR2 RFID Writer");
       Serial.println("NDEF Writer");
       pinMode(27,OUTPUT);
       digitalWrite(27,HIGH);
-      tft.initR(INITR_18GREENTAB);                             // 1.44 v2.1
+      tft.initR(INITR_GREENTAB);                             // 1.44 v2.1
       tft.fillScreen(ST7735_BLACK);                            // CLEAR
       tft.setTextColor(0x5FCC);                                // GREEN
       tft.setRotation(1);                                      // 
@@ -70,51 +55,9 @@ void setup() {
       tft.setCursor(4,3);
       tft.print("R2 Badge Writer");
       tft.setCursor(4,12);
-      tft.print("Getting list of UIDs");
+      tft.print("Select badge to write");
       nfc.begin();
       digitalWrite(LED_BUILTIN, LOW);
-
-      String num_memb = String((char*)api_url) + "?api=" + String((char*)api_key) + "&request=num_members";
-      HTTPClient http;
-      http.begin(num_memb);
-      httpCode = http.GET();
-      // httpCode will be negative on error
-      if (httpCode > 0) {
-        // HTTP header has been send and Server response header has been handled
-        // file found at server
-        if (httpCode == HTTP_CODE_OK) {
-          num_members = http.getString().toInt();
-          Serial.print("Response OK (num_members): ");
-          Serial.println(num_members);
-        }
-      } else {
-        Serial.print("Error: ");
-        Serial.println(httpCode);
-      }
-      http.end();
-
-      const size_t CAPACITY = JSON_ARRAY_SIZE(100);
-      StaticJsonDocument<CAPACITY> doc;
-      
-      String uid_list = String((char*)api_url) + "?api=" + String((char*)api_key) + "&request=list_member_uid";
-      http.begin(uid_list);
-      httpCode = http.GET();
-      // httpCode will be negative on error
-      if (httpCode > 0) {
-        // HTTP header has been send and Server response header has been handled
-        // file found at server
-        if (httpCode == HTTP_CODE_OK) {
-          payload = http.getString();
-          Serial.print("Response OK: ");
-          Serial.println(payload);
-        }
-      } else {
-        Serial.print("Error: ");
-        Serial.println(httpCode);
-      }
-      http.end();
-
-      deserializeJson(doc, payload);
 
 
 }
@@ -159,6 +102,9 @@ void loop() {
     Serial.println("-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-");
   
     char * strtokIndx;
+
+    // Data format = Droid Name, Droid ID, Member Name, Member ID, PLI Status ID
+    // test data - test,1,test,1,1
     
     strtokIndx = strtok(line,",");
     strcpy(droid_name, strtokIndx);
@@ -211,6 +157,17 @@ void loop() {
     Serial.println(id_url);
 
     delay(1000);
+
+    tft.fillScreen(ST7735_BLACK);                            // CLEAR                               // 
+    tft.setCursor(4,3);
+    tft.print(member_name);
+    tft.setCursor(4,12);
+    tft.print(droid_name);
+    tft.setCursor(4,25);
+    tft.print("Ready to write");
+    tft.setCursor(4,34);
+    tft.print("Place tag now");
+    
     
     Serial.println("\nPlace a formatted Mifare Classic or Ultralight NFC tag on the reader.");
     bool writetag=false;
@@ -233,13 +190,22 @@ void loop() {
         if (success) {
           Serial.println("Success. Try reading this tag with your phone.");        
           writetag=true;
+          tft.fillScreen(ST7735_BLACK);                            // CLEAR                               // 
+          tft.setCursor(4,3);
+          tft.print("Success!");
         } else {
           Serial.println("Write failed.");
           writetag=true;
+          tft.fillScreen(ST7735_BLACK);                            // CLEAR                               // 
+          tft.setCursor(4,3);
+          tft.print("FAIL!!!!");         
         }
     }
     delay(1000);
-    }
 
+
+    }
+    tft.setCursor(4,20);
+    tft.print("Next..."); 
     dataReady = false;
 }

@@ -7,6 +7,7 @@ import datetime
 import urllib.request
 import json
 import ast
+import serial
 from pathlib import Path
 from collections import namedtuple
 from future import standard_library
@@ -33,6 +34,11 @@ current_state = 0
 app = Flask(__name__, template_folder='templates')
 app.config['key'] = database.get_config('app_key')
 socketio = SocketIO(app)
+try:
+    ser = serial.Serial('/dev/ttyUSB0')
+except:
+    print("No serial device")
+
 broadcast = broadcast.BroadCaster()
 
 audio = audio.AudioLibrary("sounds", 1)
@@ -312,6 +318,15 @@ def list_connected():
     lease_file.close()
     message += '</code></pre></body></html>'
     return message
+
+@app.route('/admin/writecard/<member_uid>/<droid_uid>', methods=['GET'])
+def writeCard(member_uid, droid_uid):
+    member = database.get_member(member_uid)
+    droid = database.get_droid(droid_uid)
+    output = droid['name'] + "," + droid_uid + "," + member['name'] + "," + member_uid + "," + member['badge_id']
+    print(output)
+    ser.write(output)
+    return "Ok"
 
 if __name__ == '__main__':
     if __debug__:

@@ -83,7 +83,7 @@ static unsigned char r2_logo_bits[] = {
    0xfc, 0x03, 0x00, 0x00, 0x00, 0x1e, 0x00, 0x00, 0x00, 0x80, 0xff, 0x0f,
    0x00, 0x00, 0x00, 0x80, 0xff, 0x03, 0x00, 0x00, 0x00, 0x00, 0x37, 0x00 };
    
-void tone(uint16_t frequency, uint16_t duration) {
+void playTone(uint16_t frequency, uint16_t duration) {
    Serial.print("Playing tone of ");
    Serial.print(frequency);
    Serial.print("Hz for ");
@@ -166,7 +166,7 @@ void setup(void) {
   
   // Setup done
   drawScreen();
-  tone(350,10);
+  playTone(350,10);
   
 }
 
@@ -337,7 +337,7 @@ void loop(void) {
 
           // Lets notify that a card was read ok
           // Wait a bit before reading the card again
-          tone(440, 100);
+          playTone(440, 100);
           card_displayed = 1;
         }
       }

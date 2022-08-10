@@ -2,12 +2,17 @@
 <html>
 <head>
 	<title>R2 Builders Driving Course</title>
-        <link rel="stylesheet" type="text/css" href="{{ url_for('static',filename='main.css') }}">
+
+        <link rel="stylesheet" href="{{ url_for('static',filename='css/bootstrap.min.css') }}" integrity="sha384-MCw98/SFnGE8fJT3GXwEOngsV7Zt27NXFoaoApmYm81iuXoPkFOJwJ8ERdknLPMO" crossorigin="anonymous">
+        <link rel="stylesheet" href="https://cdn.datatables.net/1.12.1/css/jquery.dataTables.min.css">
         <link rel="stylesheet" href="{{ url_for('static',filename='w3.css') }}">
+        <link rel="stylesheet" type="text/css" href="{{ url_for('static',filename='main.css') }}">
 	<link rel="shortcut icon" href="{{ url_for('static', filename='favicon.ico') }}">
 	<script type="text/javascript" src="{{ url_for('static',filename='jquery-3.6.0.min.js') }}"></script>
         <script type="text/javascript" src="{{ url_for('static',filename='socket.io.min.js') }}"></script>
+        <script src="https://cdn.datatables.net/1.12.1/js/jquery.dataTables.min.js"></script> 
         <script type="text/javascript" charset="utf-8">
+         
         function register(type, uid) {
              var xhttp = new XMLHttpRequest();
              var base_url = window.location.protocol + "//" + window.location.hostname + ":" + window.location.port;
@@ -19,10 +24,12 @@
         }
 
 	$(document).ready(function() {
+
+
                 namespace = '/comms';
 		reload_contender();
-		reload_members();
-                reload_droids();
+                //reload_droids();
+
                 var socket = io.connect(location.protocol + '//' + document.domain + ':' + location.port + namespace);
 
 	        // Display log messages at the bottom of the screen
@@ -45,25 +52,9 @@
                                        $('#droid_image').html(droid_image);
                                        $('#droid_name').html(json.droid);
                                        $('#droid_details').html(droid_details);
-                               });	
+                               });
+                        $('#members_table').DataTable();	
 		}
-
-                function reload_members() {
-                        $.getJSON("/display/members",
-                                function (json) {
-                                        var tbody;
-                                        var rows = json.length;
-                                        tbody = "";
-                                        for (var i = 0; i < rows; i++) {
-                                                tbody += "<tr>";
-                                                tbody += "<td>" + json[i].name + "</td>";
-                                                tbody += "<td><input type=button value=Register onclick=\"register('member', "+ json[i].member_uid + ")\"></td>";
-                                                tbody += "</tr>";
-                                        }
-                                        $('#members_body').empty().append(tbody);
-                                });
-
-                }
  
                 function reload_droids() {
                         $.getJSON("/display/droids",
@@ -94,7 +85,65 @@
 			reload_contender();
                 });
 
-});
+                $('#members_table').DataTable( {
+                        pagination: "bootstrap",
+                        filter:true,
+                        ajax: {
+                                "url": '/display/members',
+                                "dataSrc": ""
+                        },
+                        destroy: true,
+                        lengthMenu:[5,10,25],
+                        pageLength: 10,
+                        "columns":[  
+                                {     "data": "name"     },  
+                                {     
+                                        "data": "member_uid",
+                                        "target": 1,
+                                        "searchable": false,
+                                        render: function (data, type, row, meta)
+                                        {
+                                                if (type === 'display')
+                                                {
+                                                        data = "<input type=button value=Register onclick=\"register('member', " + encodeURIComponent(data) + ")\">"
+                                                }
+                                                return data;
+                                        }
+                                } 
+                        ]            
+                } );
+
+                $('#droids_table').DataTable( {
+                        pagination: "bootstrap",
+                        filter:true,
+                        ajax: {
+                                "url": '/display/droids',
+                                "dataSrc": ""
+                        },
+                        destroy: true,
+                        lengthMenu:[5,10,25],
+                        pageLength: 10,
+                        "columns":[  
+                                {     "data": "droid_name"     },
+                                {     "data": "member_name" },   
+                                {     
+                                        "data": "droid_uid",
+                                        "target": 1,
+                                        "searchable": false,
+                                        render: function (data, type, row, meta)
+                                        {
+                                                if (type === 'display')
+                                                {
+                                                        data = "<input type=button value=Register onclick=\"register('droid', " + encodeURIComponent(data) + ")\">"
+                                                }
+                                                return data;
+                                        }
+                                } 
+                        ]            
+                } );                
+}
+        );
+
 </script>
 </head>
 <body>
@@ -115,23 +164,35 @@
                 </div>
                 <div class="members">
                         <h2>Members</h2>
-                        <table class="members_table">
+                        <table id="members_table" class="table table-striped table-bordered">
+                                <thead>
+                                        <tr>
+                                                <td>Name</td>
+                                                <td>Register</td>
+                                        </tr>
+                                </thead>
                                 <tbody id="members_body">
                                 </tbody>
                         </table>
                 </div>
                 <div class="droids">
                         <h2>Droids</h2>
-                        <table class="droids_table">
+                        <table id="droids_table" class="table table-striped table-bordered">
+                                <thead>
+                                        <tr>
+                                                <td>Name</td>
+                                                <td>Owner</td>
+                                                <td>Register</td>
+                                        </tr>
+                                </thead>                               
                                 <tbody id="droids_body">
                                 </tbody>
                         </table>
                 </div>
 		<div class="logs">
-</div>
+                </div>
 	</div>
-        </div>
-        </div>
+
 </body>
 </html>
 
