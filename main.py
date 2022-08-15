@@ -8,6 +8,7 @@ import urllib.request
 import json
 import ast
 import serial
+import requests
 from pathlib import Path
 from collections import namedtuple
 from future import standard_library
@@ -285,10 +286,12 @@ def upload_runs():
         for result in results:
             if __debug__:
                 print("Uploading Run ID: %s" % result['id'])
-            url = site_base + "/api.php?api=" + api_key + "&request=insert_course_run&id=" + urllib.parse.quote(str(result), safe='', encoding=None, errors=None)
-            code = urllib.request.urlopen(url).read().decode('utf-8').rstrip('\n')
-            print(code)
-            if code != "00000":
+            url = site_base + "/api/uploadrun" #?api_token=" + api_key
+            headers = { "Authorization" : "Bearer " + api_key, "Accept" : "application/json" }
+            #code = urllib.request.urlopen(url).read().decode('utf-8').rstrip('\n')
+            r = requests.post(url, data={"json": json.dumps(result)}, headers=headers)
+            print(r.status_code)
+            if r.status_code != 200:
                 print("Error in uploading run")
             else: 
                 print("Deleting row from local database")
