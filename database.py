@@ -255,6 +255,7 @@ def get_droid(did):
     conn = create_connection(db_location)
     c = conn.cursor()
     c.execute("SELECT * FROM droids WHERE droid_uid = " + did)
+    print("DEBUG: *****") 
     droid = dict((c.description[i][0], value) for i, value in enumerate(c.fetchone()))
     if __debug__:
         print(droid)
@@ -318,7 +319,9 @@ def list_results():
         if __debug__:
             print("Run: %s " % run[0])
         member = get_member(str(run[3]))
+        print("Getting Droid: " + str(run[2]))
         droid = get_droid(str(run[2]))
+        print(droid)
         data['member'] = member['name']
         data['droid'] = droid['name']
         data['start'] = run[1]

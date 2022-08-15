@@ -1,7 +1,8 @@
 w3.css
 socket.io.min.js
 jquery-1.4.2.min.js
-db/r2_course.db
+db/*.db
+db/config.csv
 Arduino/RFIDReader/config.h
 static/droids/*.jpg
 static/members/*.jpg
