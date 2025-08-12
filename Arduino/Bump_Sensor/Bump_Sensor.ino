@@ -1,7 +1,8 @@
-//#include <Adafruit_GFX.h>
-//#include <Adafruit_SPITFT.h>
-//#include <gfxfont.h>
-//#include <Adafruit_SPITFT_Macros.h>
+#include "DFRobotDFPlayerMini.h"
+
+#include <SoftwareSerial.h>
+SoftwareSerial softSerial(/*rx =*/10, /*tx =*/4);
+#define FPSerial softSerial
 
 #include <Adafruit_NeoPixel.h>
 #include <Adafruit_NeoMatrix.h>
@@ -14,6 +15,10 @@
 #include <WiFiUdp.h>
 #include <ArduinoOTA.h>
 
+DFRobotDFPlayerMini myDFPlayer;
+void printDetail(uint8_t type, int value);
+
+
 const byte address_bits[] =  { 13,12,14,16 };
 const int lighttime = 10000;
 unsigned int address;
@@ -21,9 +26,9 @@ unsigned int localPort = 8888;
 char packetBuffer[64]; //buffer to hold incoming packet,
 char  ReplyBuffer[] = "acknowledged\r\n";       // a string to send back
 
-#define INPUT_PASS_PIN 4
-#define INPUT_FAIL_PIN 0
-#define LED_PIN 2
+#define INPUT_PASS_PIN D4
+#define INPUT_FAIL_PIN D3
+#define LED_PIN D1
 #define CELEBRATION 10
 
 WiFiUDP Udp;
@@ -60,6 +65,12 @@ void setup() {
 
   Serial.print("Address: ");
   Serial.println(address);
+
+  FPSerial.begin(9600);
+  myDFPlayer.begin(FPSerial);
+  Serial.println(F("DFPlayer Mini online."));
+  myDFPlayer.volume(20);  //Set volume value. From 0 to 30
+  myDFPlayer.play(1);  //Play the first mp3
   
   pinMode(INPUT_PASS_PIN, INPUT);
   pinMode(INPUT_FAIL_PIN, INPUT);
@@ -77,21 +88,24 @@ void setup() {
 
   int timeout = 0;
   while (WiFiMulti.run() != WL_CONNECTED) {
-     delay(1000);
-     Serial.print("Connecting..");
+     Serial.print("(");
+     Serial.print(timeout);
+     Serial.println(")Connecting..");
      pulseLights();
      timeout ++;
-     if (timeout > 30) {
+     if (timeout > 10) {
         break;
      }
   }
   if ((WiFiMulti.run() == WL_CONNECTED)) {
      Serial.println("Connected!");
+     myDFPlayer.play(2);
      startupLights();
      matrix.fillScreen(matrix.Color(0, 0, 0));
      matrix.show();
   } else {
      Serial.println("TIMEOUT!");
+     myDFPlayer.play(3);
      flashLights(10, 100);
      matrix.fillScreen(matrix.Color(0, 0, 0));
      matrix.show();
@@ -194,6 +208,7 @@ void loop() {
   int fail = digitalRead(INPUT_FAIL_PIN);
   if (pass == LOW) {
      Serial.println("Pass hit");
+     myDFPlayer.play(2);
      passLights();
      delay(lighttime);
      offLights();
@@ -213,9 +228,33 @@ void loop() {
       }
     }
   }
+
+  if (packetSize == 8 && strncmp(packetBuffer, "volume", 6) == 0) {
+    // Check if the 7th and 8th characters are digits
+    if (isdigit(packetBuffer[6]) && isdigit(packetBuffer[7])) {
+      // The message is in the format 'volumeXX'
+      // Extract the two-digit number
+      char numStr[3];
+      numStr[0] = packetBuffer[6];
+      numStr[1] = packetBuffer[7];
+      numStr[2] = '\0'; // Null-terminate the string
+      
+      int volume = atoi(numStr); // Convert the string to an integer
+      
+      // Now you can use the 'volume' variable for your programming
+      // For example:
+      // set_volume(volume);
+      
+      Serial.print("Received volume command: ");
+      Serial.println(volume);
+      myDFPlayer.volume(volume);
+    }
+  }
+
   
   if (fail == LOW) {
      Serial.println("Fail hit");
+     myDFPlayer.play(3);
      failLights();
      String api_call = String((char*)api) + "gate/" + address + "/FAIL";
      Serial.print("API Call: ");
